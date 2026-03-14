@@ -709,7 +709,7 @@ const PREGUNTAS = [
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Jacinto Benavente</strong> conecta con:",
     opts:["Av. Ricardo Soriano y Paseo Marítimo","N-340 y C/ Trapiche","Av. Miguel Cano y MA-20"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Jacinto Benavente (zona Parque de Bomberos) conecta con Av. Miguel Cano y la MA-20 (Ronda de Marbella).",
+    ok:2, expl:"<b>Respuesta a):</b> Ctra. de Ojén (Parque de Bomberos) conecta con Av. Miguel Cano y la MA-20 (Ronda de Marbella).",
     route:{c:[36.5135,-4.8823],z:16,from:[36.5140,-4.8825],to:[36.5130,-4.8820],path:[[36.5140,-4.8825],[36.5135,-4.8823],[36.5130,-4.8820]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -763,15 +763,15 @@ const PREGUNTAS = [
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Miguel Cano</strong> conecta con:",
     opts:["MA-20 y C/ Trapiche","Av. Ricardo Soriano y C/ Peral","C/ Jacinto Benavente y Av. del Mar"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Miguel Cano conecta C/ Jacinto Benavente (zona bomberos) con Av. del Mar, siendo acceso clave en emergencias.",
+    ok:2, expl:"<b>Respuesta a):</b> C/ Miguel Cano conecta Ctra. de Ojén (zona Parque de Bomberos) con Av. del Mar, siendo acceso clave en emergencias.",
     route:{c:[36.5118,-4.8840],z:16,from:[36.5130,-4.8822],to:[36.5108,-4.8858],path:[[36.5130,-4.8822],[36.5118,-4.8840],[36.5108,-4.8858]]}},
 
   // ── Ubicación ──
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Parque de Bomberos de Marbella</strong> está en:",
-    opts:["Av. del Trapiche, zona norte","Av. Severo Ochoa, junto al hospital","C/ Jacinto Benavente, junto a la MA-20"],
-    ok:2, expl:"<b>Respuesta a):</b> El Parque de Bomberos de Marbella se encuentra en C/ Jacinto Benavente, junto a la MA-20 en la zona norte del casco urbano.",
-    route:{c:[36.5135,-4.8822],z:15,from:[36.5138,-4.8825],to:[36.5132,-4.8820],path:[[36.5138,-4.8825],[36.5135,-4.8822],[36.5132,-4.8820]]}},
+    opts:["Av. Severo Ochoa, junto al hospital","C/ Jacinto Benavente, junto a la MA-20","Ctra. de Ojén s/n, junto al C.C. La Cañada"],
+    ok:2, expl:"<b>Respuesta c):</b> El Parque de Bomberos de Marbella está en la Carretera de Ojén s/n, en las proximidades del Centro Comercial La Cañada.",
+    route:{c:[36.5258,-4.9012],z:15,from:[36.5260,-4.9015],to:[36.5256,-4.9009],path:[[36.5260,-4.9015],[36.5258,-4.9012],[36.5256,-4.9009]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Hospital Costa del Sol</strong> está ubicado en:",
@@ -847,15 +847,15 @@ const PREGUNTAS = [
 
   // ── Rutas ──
   { zone:"marbella", tipo:"ruta",
-    text:"Desde el <strong>Parque de Bomberos</strong> (C/ Jacinto Benavente) hasta el <strong>Hospital Costa del Sol</strong>, la ruta más rápida es:",
+    text:"Desde el <strong>Parque de Bomberos</strong> (Ctra. de Ojén, La Cañada) hasta el <strong>Hospital Costa del Sol</strong>, la ruta más rápida es:",
     opts:["C/ Jacinto Benavente → Av. Miguel Cano → Av. del Mar → Av. Severo Ochoa","C/ Jacinto Benavente → MA-20 → A-7 → Salida 176 → Av. Severo Ochoa","MA-20 → N-340 → Centro urbano → Av. Severo Ochoa"],
     ok:1, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 hasta la salida 176 hacia Av. Severo Ochoa es la ruta más rápida, evitando el tráfico del centro.",
     route:{c:[36.5130,-4.8780],z:14,from:[36.5135,-4.8822],to:[36.5089,-4.8721],path:[[36.5135,-4.8822],[36.5165,-4.8800],[36.5089,-4.8721]]}},
 
   { zone:"marbella", tipo:"ruta",
-    text:"Desde la <strong>Plaza de los Naranjos</strong> hasta el <strong>Parque de Bomberos</strong>, la ruta más directa es:",
-    opts:["C/ Nueva → Av. Severo Ochoa → MA-20 → C/ Jacinto Benavente","Paseo Marítimo → Av. del Mar → C/ Jacinto Benavente","C/ Peral → Av. Ricardo Soriano → C/ Jacinto Benavente"],
-    ok:2, expl:"<b>Respuesta a):</b> Bajando por C/ Peral a Av. Ricardo Soriano y tomando C/ Jacinto Benavente es la ruta más corta desde el casco antiguo.",
+    text:"Desde la <strong>Plaza de los Naranjos</strong> hasta el <strong>Parque de Bomberos</strong> (Ctra. Ojén), la ruta más directa es:",
+    opts:["Paseo Marítimo → N-340 → MA-20 → Ctra. Ojén","Av. Ricardo Soriano → N-340 → MA-20 → Ctra. Ojén","C/ Peral → Av. Ricardo Soriano → Av. del Trapiche → MA-20 → Ctra. Ojén"],
+    ok:1, expl:"<b>Respuesta b):</b> Desde el casco antiguo, Av. Ricardo Soriano conecta con la N-340, que lleva a la MA-20 y de ahí a la Ctra. de Ojén donde está el Parque de Bomberos.",
     route:{c:[36.5115,-4.8835],z:15,from:[36.5101,-4.8846],to:[36.5135,-4.8822],path:[[36.5101,-4.8846],[36.5095,-4.8850],[36.5135,-4.8822]]}},
 
   { zone:"marbella", tipo:"ruta",
@@ -883,7 +883,7 @@ const PREGUNTAS = [
     route:{c:[36.5094,-4.8815],z:15,from:[36.5097,-4.8748],to:[36.5091,-4.8866],path:[[36.5097,-4.8748],[36.5095,-4.8850],[36.5088,-4.8858],[36.5091,-4.8866]]}},
 
   { zone:"marbella", tipo:"ruta",
-    text:"Incendio en la <strong>Urb. Los Monteros</strong> (km 183 A-7). Desde el Parque de Bomberos la ruta más rápida es:",
+    text:"Incendio en la <strong>Urb. Los Monteros</strong> (km 183 A-7). Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén) la ruta más rápida es:",
     opts:["MA-20 → A-7 dirección Este → Salida km 183","N-340 dirección Este todo el trayecto","Av. Severo Ochoa → A-7 Este → Salida km 183"],
     ok:0, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 se incorpora a la A-7 dirección Este. La salida km 183 da acceso directo a Los Monteros.",
     route:{c:[36.5080,-4.8620],z:13,from:[36.5135,-4.8822],to:[36.5015,-4.8480],path:[[36.5135,-4.8822],[36.5165,-4.8800],[36.5015,-4.8480]]}},
@@ -1221,7 +1221,7 @@ const PREGUNTAS = [
     route:{c:[36.5030,-4.8460],z:13,from:[36.5089,-4.8721],to:[36.5005,-4.8320],path:[[36.5089,-4.8721],[36.5060,-4.8600],[36.5005,-4.8320]]}},
 
   { zone:"elviria", tipo:"ruta",
-    text:"Desde el <strong>Parque de Bomberos de Marbella</strong> hasta <strong>Urb. Las Chapas</strong>, la ruta más rápida es:",
+    text:"Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén, La Cañada) hasta <strong>Urb. Las Chapas</strong>, la ruta más rápida es:",
     opts:["Av. Severo Ochoa → N-340 Este → Las Chapas","N-340 dirección Este todo el trayecto","MA-20 → A-7 dirección Este → Salida Las Chapas"],
     ok:2, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 dirección Este se llega a Las Chapas por su propia salida.",
     route:{c:[36.5000,-4.8500],z:13,from:[36.5135,-4.8822],to:[36.4972,-4.8200],path:[[36.5135,-4.8822],[36.5160,-4.8700],[36.4972,-4.8200]]}},
@@ -1250,7 +1250,7 @@ const PREGUNTAS = [
     route:{c:[36.5800,-4.8500],z:13,from:[36.5803,-4.8503],to:[36.5797,-4.8497],path:[[36.5803,-4.8503],[36.5800,-4.8500],[36.5797,-4.8497]]}},
 
   { zone:"istan", tipo:"ruta",
-    text:"Urgencia en <strong>Istán</strong>. Desde el Parque de Bomberos de Marbella la ruta es:",
+    text:"Urgencia en <strong>Istán</strong>. Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén) la ruta es:",
     opts:["MA-20 → A-355 norte → Istán","Av. Severo Ochoa → N-340 → A-355 → Istán","A-7 → N-340 → A-355 → Istán"],
     ok:1, expl:"<b>Respuesta c):</b> Desde el parque se toma Av. Severo Ochoa a la N-340 y desde allí la A-355 sube directamente a Istán.",
     route:{c:[36.5420,-4.9180],z:12,from:[36.5135,-4.8822],to:[36.5590,-4.9250],path:[[36.5135,-4.8822],[36.5270,-4.9180],[36.5590,-4.9250]]}},
