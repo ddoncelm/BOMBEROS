@@ -1,0 +1,16 @@
+{
+  "name": "Bomberos Marbella · Oposiciones",
+  "short_name": "BomberosOpo",
+  "description": "Entrena el examen de acceso al Cuerpo de Bomberos de Marbella",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FF3C1A",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["education", "utilities"],
+  "lang": "es"
+}
