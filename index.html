@@ -587,7 +587,10 @@ header{
 ══════════════════════════════════════ */
 // Password loaded from config.js (edit that file in GitHub to change it)
 const DEFAULT_PW = (window.APP_CONFIG && window.APP_CONFIG.password) || 'Bomberos24';
-let currentPw = localStorage.getItem('pw') || DEFAULT_PW;
+// Password comes ONLY from config.js — localStorage overrides are removed
+let currentPw = DEFAULT_PW;
+// Clear any old password stored in localStorage to avoid conflicts
+localStorage.removeItem('pw');
 let pwLocked = !sessionStorage.getItem('unlocked');
 let pwVisible = false;
 
@@ -626,9 +629,8 @@ function togglePwVisibility(){
 function savePin(){
   const v=document.getElementById('newPinInput').value.trim();
   if(v.length<4){ toast('⚠️ La contraseña debe tener al menos 4 caracteres'); return; }
-  currentPw=v; localStorage.setItem('pw',v);
+  toast('⚠️ Para cambiar la contraseña edita config.js en GitHub');
   document.getElementById('newPinInput').value='';
-  toast('✓ Contraseña actualizada');
 }
 
 function showPwHint(){
@@ -1258,7 +1260,7 @@ header{
 ══════════════════════════════════════ */
 // Password loaded from config.js (edit that file in GitHub to change it)
 const DEFAULT_PW = (window.APP_CONFIG && window.APP_CONFIG.password) || 'Bomberos24';
-let currentPw = localStorage.getItem('pw') || DEFAULT_PW;
+let currentPw = DEFAULT_PW;
 let pwLocked = !sessionStorage.getItem('unlocked');
 let pwVisible = false;
 
