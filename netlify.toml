@@ -3,16 +3,32 @@
 [build]
   publish = "."
 
-# Security headers
+# index.html y config.js — NUNCA en caché, siempre la versión más reciente
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+[[headers]]
+  for = "/config.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Seguridad
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
-# Cache fonts and static assets
+# Iconos y assets estáticos — sí pueden ir en caché
 [[headers]]
   for = "/icons/*"
   [headers.values]
@@ -23,7 +39,7 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
-# PWA routing — all routes to index.html
+# PWA routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
