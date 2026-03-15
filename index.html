@@ -2,9 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#FF3C1A">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -417,13 +414,13 @@ header{
     </div>
 
     <div class="map-panel">
-      <div class="map-panel-title">📡 Mapa · IGN España + Catastro</div>
+      <div class="map-panel-title">📡 Mapa · OpenStreetMap</div>
       <div class="map-btns">
         <button class="map-btn" onclick="loadOSM()">⬇ Actualizar OSM</button>
         <button class="map-btn" onclick="document.getElementById('fInput').click()">📁 Cargar .osm</button>
         <input type="file" id="fInput" accept=".osm,.geojson,.json" style="display:none" onchange="loadFile(this)">
       </div>
-      <div class="map-status ok" id="mapStatus">✓ IGN España + Catastro · Guadalmina–Cabopino · Listo</div>
+      <div class="map-status ok" id="mapStatus">✓ Marbella municipio · 847 vías · Listo offline</div>
     </div>
 
     <!-- PWA install prompt -->
@@ -450,7 +447,7 @@ header{
   <div class="options" id="opts"></div>
   <div class="explanation" id="expl"></div>
   <div class="map-wrap" id="mapWrap">
-    <div class="map-label" id="mapLabel">🗺 Ruta en el mapa · IGN España + Catastro</div>
+    <div class="map-label">🗺 Ruta en el mapa · OpenStreetMap</div>
     <div id="leafletMap"></div>
   </div>
   <div class="quiz-foot">
@@ -587,680 +584,8 @@ header{
 ══════════════════════════════════════ */
 // Password loaded from config.js (edit that file in GitHub to change it)
 const DEFAULT_PW = (window.APP_CONFIG && window.APP_CONFIG.password) || 'Bomberos24';
-// Password comes ONLY from config.js — localStorage overrides are removed
 let currentPw = DEFAULT_PW;
-// Clear any old password stored in localStorage to avoid conflicts
 localStorage.removeItem('pw');
-let pwLocked = !sessionStorage.getItem('unlocked');
-let pwVisible = false;
-
-function initPin(){
-  if(!pwLocked){ document.getElementById('pinScreen').classList.add('hidden'); return; }
-  document.getElementById('pinScreen').classList.remove('hidden');
-  setTimeout(()=>{ const f=document.getElementById('pwInput'); if(f) f.focus(); }, 300);
-}
-
-function checkPassword(){
-  const val = document.getElementById('pwInput').value;
-  const field = document.getElementById('pwInput');
-  if(val === currentPw){
-    sessionStorage.setItem('unlocked','1');
-    document.getElementById('pinScreen').classList.add('hidden');
-    document.getElementById('pwInput').value='';
-    field.classList.remove('error');
-  } else {
-    field.classList.add('error');
-    document.getElementById('pinErr').classList.add('show');
-    setTimeout(()=>{
-      field.classList.remove('error');
-      document.getElementById('pinErr').classList.remove('show');
-      field.value=''; field.focus();
-    }, 1100);
-  }
-}
-
-function togglePwVisibility(){
-  pwVisible=!pwVisible;
-  const f=document.getElementById('pwInput');
-  f.type=pwVisible?'text':'password';
-  document.getElementById('pwToggle').textContent=pwVisible?'🙈':'👁';
-}
-
-function savePin(){
-  const v=document.getElementById('newPinInput').value.trim();
-  if(v.length<4){ toast('⚠️ La contraseña debe tener al menos 4 caracteres'); return; }
-  toast('⚠️ Para cambiar la contraseña edita config.js en GitHub');
-  document.getElementById('newPinInput').value='';
-}
-
-function showPwHint(){
-  const hint = currentPw.length + ' caracteres, empieza por "' + currentPw[0] + '"';
-  document.getElementById('currentPwHint').textContent = hint;
-  setTimeout(()=>{ document.getElementById('currentPwHint').textContent='Toca para ver pista'; }, 4000);
-}
-
-function lockApp(){
-  sessionStorage.removeItem('unlocked');
-  pwLocked=true;
-  document.getElementById('pinScreen').classList.remove('hidden');
-  document.getElementById('pwInput').value='';
-  showScreen('home');
-  setTimeout(()=>{ const f=document.getElementById('pwInput'); if(f) f.focus(); }, 300);
-}
-
-/* ══════════════════════════════════════
-   BANCO DE PREGUNTAS — 80+ preguntas
-   Formato real del examen
-══════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════
-   BANCO DE PREGUNTAS — Bomberos Marbella · Oposiciones
-   Formato real del examen (3 opciones a/b/c)
-   Tipos:
-     "conectividad"  → ¿X conecta con Y?
-     "ubicacion"     → ¿Dónde está X?
-     "ruta"          → Ruta más rápida de A a B
-   Zonas:
-     marbella | sanpedro | nueva | benahavis | elviria | istan
-   ════════════════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════════
-   BANCO DE PREGUNTAS — Bomberos Marbella · Oposiciones
-   Formato real del examen (3 opciones a/b/c)
-   Tipos:
-     "conectividad"  → ¿X conecta con Y?
-     "ubicacion"     → ¿Dónde está X?
-     "ruta"          → Ruta más rápida de A a B
-   Zonas:
-     marbella | sanpedro | nueva | benahavis | elviria | istan
-   ════════════════════════════════════════════════════════════ */
-
-OCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#FF3C1A">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="BomberosOpo">
-<link rel="manifest" href="/manifest.json">
-<script src="/config.js"></script>
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
-<title>Bomberos Marbella · Oposiciones</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-/* ══════════════════ TOKENS ══════════════════ */
-:root {
-  --bg:#000; --panel:#111; --panel2:#1a1a1a; --border:#2c2c2c;
-  --text:#f0f0f0; --muted:#666; --muted2:#444;
-  --fire:#FF3C1A; --ember:#FF7A00; --gold:#FFB800;
-  --correct:#22C55E; --wrong:#EF4444;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
-body{
-  font-family:'IBM Plex Sans',sans-serif;
-  background:var(--bg);color:var(--text);
-  min-height:100vh;max-width:480px;margin:0 auto;
-  overflow-x:hidden;
-}
-
-/* ══════════════════ PASSWORD SCREEN ══════════════════ */
-#pinScreen{
-  position:fixed;inset:0;z-index:9999;
-  background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 32px;
-}
-#pinScreen.hidden{display:none;}
-.pin-logo{font-size:52px;margin-bottom:18px;}
-.pin-title{
-  font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;
-  color:var(--text);margin-bottom:6px;text-align:center;
-}
-.pin-sub{font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center;line-height:1.5;}
-.pw-field-wrap{
-  position:relative;width:100%;max-width:320px;margin-bottom:14px;
-}
-.pw-field{
-  width:100%;background:var(--panel);
-  border:1.5px solid var(--border);border-radius:10px;
-  padding:16px 50px 16px 18px;
-  font-family:'IBM Plex Mono',monospace;font-size:18px;
-  color:var(--text);letter-spacing:3px;
-  outline:none;transition:border-color .2s;
-  -webkit-appearance:none;
-}
-.pw-field:focus{border-color:var(--fire);}
-.pw-field.error{border-color:var(--wrong);animation:shake .4s ease;}
-.pw-toggle{
-  position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  background:none;border:none;color:var(--muted);cursor:pointer;
-  font-size:18px;padding:4px;transition:color .2s;
-}
-.pw-toggle:hover{color:var(--text);}
-.pw-submit{
-  width:100%;max-width:320px;
-  background:var(--fire);border:none;border-radius:10px;
-  padding:16px;
-  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;
-  color:white;cursor:pointer;transition:all .18s;
-}
-.pw-submit:hover{background:#e03516;transform:scale(1.01);}
-.pw-submit:active{transform:scale(.97);}
-@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.pin-err{
-  margin-top:14px;font-size:13px;color:var(--wrong);
-  opacity:0;transition:opacity .3s;text-align:center;
-}
-.pin-err.show{opacity:1;}
-
-/* ══════════════════ HEADER ══════════════════ */
-header{
-  background:var(--bg);border-bottom:1px solid var(--border);
-  padding:12px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-flame{
-  width:32px;height:32px;background:var(--fire);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:16px;flex-shrink:0;
-}
-.logo-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;line-height:1;}
-.logo-city{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
-.hdr-stats{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;}
-.hdr-stats b{color:var(--gold);}
-
-/* ══════════════════ SCREENS ══════════════════ */
-.screen{display:none;}
-.screen.active{display:block;}
-
-/* ══════════════════ HOME ══════════════════ */
-#home{padding:24px 18px 40px;}
-.hero-tag{
-  display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--fire);border:1px solid rgba(255,60,26,.3);
-  border-radius:4px;padding:3px 8px;margin-bottom:14px;
-}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.95;margin-bottom:10px;}
-.hero-title span{color:var(--fire);}
-.hero-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:28px;}
-
-.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px;}
-.stat-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 8px;text-align:center;}
-.stat-n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--gold);line-height:1;}
-.stat-l{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
-
-.menu{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
-.menu-item{
-  display:flex;align-items:center;gap:14px;
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:10px;padding:15px 16px;
-  cursor:pointer;transition:all .18s;color:var(--text);
-  width:100%;text-align:left;
-}
-.menu-item:hover{border-color:var(--fire);background:rgba(255,60,26,.05);}
-.menu-item.featured{background:var(--fire);border-color:var(--fire);}
-.menu-item.featured:hover{background:#e03516;}
-.mi-icon{font-size:22px;width:36px;text-align:center;flex-shrink:0;}
-.mi-title{font-weight:600;font-size:15px;}
-.mi-sub{font-size:12px;color:rgba(240,240,240,.5);margin-top:2px;}
-.menu-item.featured .mi-sub{color:rgba(255,255,255,.7);}
-.mi-arr{margin-left:auto;color:var(--muted2);font-size:18px;}
-
-.map-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
-.map-panel-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
-.map-btns{display:flex;gap:8px;}
-.map-btn{
-  flex:1;background:var(--panel2);border:1px solid var(--border);
-  border-radius:7px;padding:9px 10px;
-  font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--text);
-  cursor:pointer;transition:border-color .18s;
-  display:flex;align-items:center;justify-content:center;gap:5px;
-}
-.map-btn:hover{border-color:var(--ember);color:var(--ember);}
-.map-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;}
-.map-status.ok{color:var(--correct);}
-.map-status.loading{color:var(--gold);}
-
-/* ══════════════════ QUIZ ══════════════════ */
-#quiz{padding-bottom:40px;}
-.quiz-topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 18px;border-bottom:1px solid var(--border);
-  background:var(--bg);position:sticky;top:57px;z-index:50;
-}
-.cancel-btn{
-  display:flex;align-items:center;gap:6px;
-  background:transparent;border:1px solid var(--border);
-  border-radius:7px;padding:7px 12px;
-  font-family:'IBM Plex Sans',sans-serif;font-size:13px;
-  color:var(--muted);cursor:pointer;transition:all .18s;
-}
-.cancel-btn:hover{border-color:var(--wrong);color:var(--wrong);}
-.q-counter{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
-.q-counter strong{color:var(--text);}
-.q-timer{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);letter-spacing:1px;}
-.q-timer.urgent{color:var(--fire);animation:blink 1s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-
-.progress-bar{height:2px;background:var(--border);}
-.progress-fill{height:100%;background:var(--fire);transition:width .35s ease;}
-
-.q-card{margin:14px 18px 0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 16px;}
-.q-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fire);margin-bottom:8px;letter-spacing:1px;}
-.q-text{font-size:16px;font-weight:400;line-height:1.55;color:var(--text);}
-.q-text strong{color:var(--gold);font-weight:600;}
-
-/* OPTIONS — formato real: a) b) c) */
-.options{padding:0 18px;margin-top:10px;display:flex;flex-direction:column;}
-.opt{
-  display:flex;align-items:flex-start;gap:14px;
-  padding:14px 16px;
-  background:var(--panel);border:1px solid var(--border);border-top:none;
-  cursor:pointer;transition:background .15s;
-  width:100%;text-align:left;color:var(--text);
-  font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1.5;
-}
-.opt:first-child{border-top:1px solid var(--border);border-radius:8px 8px 0 0;}
-.opt:last-child{border-radius:0 0 8px 8px;}
-.opt:only-child{border-radius:8px;}
-.opt:hover:not(:disabled){background:rgba(255,122,0,.07);}
-.opt-letter{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--muted);min-width:20px;padding-top:1px;flex-shrink:0;}
-.opt.correct{background:rgba(34,197,94,.1)!important;border-color:var(--correct)!important;}
-.opt.correct .opt-letter{color:var(--correct);font-weight:700;}
-.opt.wrong{background:rgba(239,68,68,.08)!important;border-color:var(--wrong)!important;}
-.opt.wrong .opt-letter{color:var(--wrong);font-weight:700;}
-.opt:disabled{cursor:default;}
-
-.explanation{
-  margin:12px 18px 0;background:var(--panel2);
-  border-left:3px solid var(--ember);border-radius:0 8px 8px 0;
-  padding:13px 15px;font-size:13px;line-height:1.6;color:var(--text);display:none;
-}
-.explanation.show{display:block;}
-.explanation b{color:var(--gold);}
-
-/* LEAFLET MAP */
-.map-wrap{margin:12px 18px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none;}
-.map-wrap.show{display:block;}
-.map-label{padding:8px 12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--border);}
-#leafletMap{height:220px;background:#0e1520;}
-
-.quiz-foot{padding:14px 18px 0;}
-.next-btn{
-  width:100%;border:none;border-radius:8px;padding:16px;
-  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;
-  color:white;background:var(--fire);cursor:pointer;transition:background .18s;display:none;
-}
-.next-btn.show{display:block;}
-.next-btn:hover{background:#e03516;}
-
-/* CANCEL CONFIRM MODAL */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);
-  z-index:500;display:none;align-items:center;justify-content:center;
-  padding:20px;
-}
-.modal-overlay.show{display:flex;}
-.modal{
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:14px;padding:28px 24px;width:100%;max-width:320px;text-align:center;
-}
-.modal h3{font-family:'Bebas Neue',sans-serif;font-size:26px;margin-bottom:8px;}
-.modal p{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:24px;}
-.modal-btns{display:flex;flex-direction:column;gap:8px;}
-.modal-btn{
-  width:100%;border-radius:8px;padding:14px;cursor:pointer;
-  font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;
-  border:none;transition:all .18s;
-}
-.modal-btn.danger{background:var(--wrong);color:white;}
-.modal-btn.danger:hover{background:#dc2626;}
-.modal-btn.ghost{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
-
-/* ══════════════════ RESULTS ══════════════════ */
-#results{padding:36px 18px 40px;text-align:center;}
-.res-emoji{font-size:56px;margin-bottom:12px;}
-.res-title{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1;margin-bottom:4px;}
-.res-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-.score-big{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:14px;}
-.score-frac{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--gold);line-height:1;}
-.score-pct{font-size:13px;color:var(--muted);margin-top:4px;}
-.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;}
-.res-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;}
-.res-n{font-family:'Bebas Neue',sans-serif;font-size:32px;}
-.res-n.g{color:var(--correct);} .res-n.r{color:var(--wrong);}
-.res-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.res-actions{display:flex;flex-direction:column;gap:8px;}
-.res-btn{width:100%;border-radius:8px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;cursor:pointer;border:none;transition:all .18s;}
-.res-btn.p{background:var(--fire);color:white;}
-.res-btn.p:hover{background:#e03516;}
-.res-btn.s{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:15px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
-
-/* ══════════════════ SETTINGS ══════════════════ */
-#settings{padding:20px 18px 40px;}
-.set-hdr{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
-.set-back{font-size:22px;cursor:pointer;color:var(--muted);transition:color .18s;}
-.set-back:hover{color:var(--fire);}
-.set-title{font-family:'Bebas Neue',sans-serif;font-size:30px;}
-.set-group{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;}
-.set-gtitle{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 14px 6px;}
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-top:1px solid var(--border);}
-.set-row:first-of-type{border-top:none;}
-.set-row label{font-size:14px;font-weight:500;}
-.set-row small{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
-.sel{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;}
-.toggle{width:42px;height:24px;background:var(--muted2);border-radius:12px;position:relative;cursor:pointer;transition:background .25s;border:none;flex-shrink:0;}
-.toggle.on{background:var(--fire);}
-.toggle::after{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .25s;}
-.toggle.on::after{transform:translateX(18px);}
-.pin-change-row{display:flex;gap:8px;align-items:center;}
-.pin-input{
-  background:var(--panel2);border:1px solid var(--border);
-  border-radius:6px;padding:7px 12px;color:var(--text);
-  font-family:'IBM Plex Mono',monospace;font-size:16px;
-  width:100px;letter-spacing:4px;text-align:center;
-}
-.pin-save-btn{
-  background:var(--fire);border:none;border-radius:6px;
-  padding:8px 14px;color:white;font-size:13px;font-weight:600;
-  cursor:pointer;white-space:nowrap;
-}
-
-/* TOAST */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:var(--panel2);border:1px solid var(--border);
-  border-radius:8px;padding:10px 18px;font-size:13px;color:var(--text);
-  z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;
-}
-.toast.show{opacity:1;}
-
-/* Leaflet dark tiles adjustment */
-.leaflet-tile{filter:brightness(.7) invert(1) hue-rotate(180deg);}
-.leaflet-container{background:#0e1520!important;}
-</style>
-</head>
-<body>
-
-<!-- ══ PASSWORD LOCK SCREEN ══ -->
-<div id="pinScreen">
-  <div class="pin-logo">🔥</div>
-  <div class="pin-title">ACCESO RESTRINGIDO</div>
-  <div class="pin-sub">Introduce la contraseña para acceder<br>a la app de oposiciones de bomberos</div>
-  <div class="pw-field-wrap">
-    <input class="pw-field" type="password" id="pwInput"
-      placeholder="Contraseña"
-      autocomplete="current-password"
-      autocapitalize="none"
-      spellcheck="false"
-      onkeydown="if(event.key==='Enter')checkPassword()">
-    <button class="pw-toggle" onclick="togglePwVisibility()" id="pwToggle" title="Mostrar/ocultar">👁</button>
-  </div>
-  <button class="pw-submit" onclick="checkPassword()">ENTRAR →</button>
-  <div class="pin-err" id="pinErr">Contraseña incorrecta. Inténtalo de nuevo.</div>
-</div>
-
-<!-- ══ HEADER ══ -->
-<header>
-  <div class="logo">
-    <div class="logo-flame">🔥</div>
-    <div>
-      <div class="logo-name">Bomberos</div>
-      <div class="logo-city" id="logoCity">Marbella · Oposiciones</div>
-    </div>
-  </div>
-  <div class="hdr-stats">
-    Racha <b id="hdrRecord">—</b><br>
-    <span style="font-size:10px">Total: <b id="hdrTotal" style="color:var(--text)">0</b></span>
-  </div>
-</header>
-
-<!-- ══ HOME ══ -->
-<div id="home" class="screen active">
-  <div style="padding:24px 18px 40px">
-    <div class="hero-tag" id="heroTag">🚒 Municipio completo · PWA offline</div>
-    <h1 class="hero-title">ENTRENA<br><span>LAS CALLES</span></h1>
-    <p class="hero-sub">Prepara el test de acceso al Cuerpo de Bomberos de Marbella. Calles, rotondas, urbanizaciones y accesos de todo el municipio. <strong style="color:var(--text)" id="qBankCount"></strong></p>
-
-    <div class="stats-bar">
-      <div class="stat-box"><div class="stat-n" id="sTotal">0</div><div class="stat-l">Preguntas</div></div>
-      <div class="stat-box"><div class="stat-n" id="sAciertos">—</div><div class="stat-l">Aciertos</div></div>
-      <div class="stat-box"><div class="stat-n" id="sRacha">0</div><div class="stat-l">Racha 🔥</div></div>
-    </div>
-
-    <div class="menu">
-      <div style="background:var(--fire);border-radius:10px;overflow:hidden;margin-bottom:0">
-        <button class="menu-item featured" style="border-radius:0;border-bottom:1px solid rgba(255,255,255,.15)" onclick="startQuiz('exam')">
-          <div class="mi-icon">📋</div>
-          <div><div class="mi-title">Simulacro de examen</div><div class="mi-sub">Sin pistas · Cronómetro</div></div>
-          <div class="mi-arr">›</div>
-        </button>
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(0,0,0,.15)">
-          <span style="font-size:12px;color:rgba(255,255,255,.8);flex:1">Preguntas:</span>
-          <select id="sNumHome" class="sel" style="background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.2);color:white;font-size:13px" onchange="document.getElementById('sNum').value=this.value">
-            <option value="10">10</option>
-            <option value="20" selected>20</option>
-            <option value="30">30</option>
-            <option value="50">50</option>
-          </select>
-          <span style="font-size:12px;color:rgba(255,255,255,.8)">Zona:</span>
-          <select id="sZonaHome" class="sel" style="background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.2);color:white;font-size:12px" onchange="document.getElementById('sZona').value=this.value">
-            <option value="all">Todo</option>
-            <option value="marbella">Marbella</option>
-            <option value="sanpedro">San Pedro</option>
-            <option value="nueva">Nueva And.</option>
-            <option value="benahavis">Benahavís</option>
-            <option value="elviria">Elviria</option>
-            <option value="istan">Istán</option>
-          </select>
-        </div>
-      </div>
-      <button class="menu-item" onclick="startQuiz('practice')">
-        <div class="mi-icon">🗺️</div>
-        <div><div class="mi-title">Práctica libre</div><div class="mi-sub">Sin tiempo · Con explicación y mapa real</div></div>
-        <div class="mi-arr">›</div>
-      </button>
-      <button class="menu-item" onclick="showZoneSelect()">
-        <div class="mi-icon">📍</div>
-        <div><div class="mi-title">Por zona</div><div class="mi-sub">San Pedro, Nueva Andalucía, Benahavís, Elviria…</div></div>
-        <div class="mi-arr">›</div>
-      </button>
-      <button class="menu-item" onclick="showScreen('settings')">
-        <div class="mi-icon">⚙️</div>
-        <div><div class="mi-title">Configuración</div><div class="mi-sub">PIN, municipio, mapa, tiempo</div></div>
-        <div class="mi-arr">›</div>
-      </button>
-    </div>
-
-    <!-- IMPORT QUESTIONS PANEL -->
-    <div class="map-panel" style="margin-top:10px">
-      <div class="map-panel-title">📚 Importar preguntas · PDF / TXT / DOC</div>
-      <div class="map-btns">
-        <button class="map-btn" onclick="document.getElementById('qImport').click()">📄 Subir PDF/TXT</button>
-        <button class="map-btn" onclick="showImportHelp()">❓ Formato</button>
-        <input type="file" id="qImport" accept=".txt,.pdf,.doc,.docx" style="display:none" onchange="importQuestions(this)">
-      </div>
-      <div class="map-status" id="importStatus" style="color:var(--muted)">Sube un PDF o TXT con preguntas para añadirlas al banco</div>
-    </div>
-
-    <div class="map-panel">
-      <div class="map-panel-title">📡 Mapa · IGN España + Catastro</div>
-      <div class="map-btns">
-        <button class="map-btn" onclick="loadOSM()">⬇ Actualizar OSM</button>
-        <button class="map-btn" onclick="document.getElementById('fInput').click()">📁 Cargar .osm</button>
-        <input type="file" id="fInput" accept=".osm,.geojson,.json" style="display:none" onchange="loadFile(this)">
-      </div>
-      <div class="map-status ok" id="mapStatus">✓ IGN España + Catastro · Guadalmina–Cabopino · Listo</div>
-    </div>
-
-    <!-- PWA install prompt -->
-    <div id="installBanner" style="display:none;margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">📲 Instalar como app</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Añade la app a tu pantalla de inicio para usarla sin internet</div>
-      <button onclick="installPWA()" style="background:var(--fire);border:none;border-radius:7px;padding:9px 16px;color:white;font-size:13px;font-weight:600;cursor:pointer;width:100%">Instalar en este dispositivo</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ QUIZ ══ -->
-<div id="quiz" class="screen">
-  <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
-  <div class="quiz-topbar">
-    <button class="cancel-btn" onclick="confirmCancel()">✕ Salir</button>
-    <div class="q-counter">Preg. <strong id="qN">1</strong>/<span id="qT">20</span></div>
-    <div class="q-timer" id="qtimer">—</div>
-  </div>
-  <div class="q-card">
-    <div class="q-num" id="qNum">PREGUNTA 1</div>
-    <div class="q-text" id="qText">Cargando…</div>
-  </div>
-  <div class="options" id="opts"></div>
-  <div class="explanation" id="expl"></div>
-  <div class="map-wrap" id="mapWrap">
-    <div class="map-label" id="mapLabel">🗺 Ruta en el mapa · IGN España + Catastro</div>
-    <div id="leafletMap"></div>
-  </div>
-  <div class="quiz-foot">
-    <button class="next-btn" id="nextBtn" onclick="nextQ()">SIGUIENTE →</button>
-  </div>
-</div>
-
-<!-- ══ RESULTS ══ -->
-<div id="results" class="screen">
-  <div style="padding:36px 18px 40px;text-align:center">
-    <div class="res-emoji" id="rEmoji">🏆</div>
-    <div class="res-title" id="rTitle">EXCELENTE</div>
-    <div class="res-sub" id="rSub">Simulacro completado</div>
-    <div class="score-big">
-      <div class="score-frac"><span id="rC">0</span>/<span id="rT2">20</span></div>
-      <div class="score-pct" id="rPct">0% de aciertos</div>
-    </div>
-    <div class="res-grid">
-      <div class="res-box"><div class="res-n g" id="r1">0</div><div class="res-lbl">Correctas</div></div>
-      <div class="res-box"><div class="res-n r" id="r2">0</div><div class="res-lbl">Incorrectas</div></div>
-      <div class="res-box"><div class="res-n" id="r3">—</div><div class="res-lbl">Tiempo</div></div>
-      <div class="res-box"><div class="res-n" id="r4">0</div><div class="res-lbl">Racha máx.</div></div>
-    </div>
-    <div class="res-actions">
-      <button class="res-btn p" onclick="startQuiz('exam')">REPETIR SIMULACRO</button>
-      <button class="res-btn s" onclick="showScreen('home')">← Volver al inicio</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ SETTINGS ══ -->
-<div id="settings" class="screen">
-  <div style="padding:20px 18px 40px">
-    <div class="set-hdr">
-      <span class="set-back" onclick="showScreen('home')">←</span>
-      <span class="set-title">Configuración</span>
-    </div>
-    <div class="set-group">
-      <div class="set-gtitle">Seguridad</div>
-      <div class="set-row">
-        <div><label>Contraseña de acceso</label><small>Alfanumérica · Mín. 4 caracteres</small></div>
-        <div class="pin-change-row">
-          <input class="pin-input" type="password" id="newPinInput"
-            placeholder="Nueva clave"
-            autocapitalize="none" spellcheck="false"
-            style="width:120px;letter-spacing:2px;font-size:14px;">
-          <button class="pin-save-btn" onclick="savePin()">Guardar</button>
-        </div>
-      </div>
-      <div class="set-row">
-        <div><label>Clave actual</label><small id="currentPwHint">Toca para ver pista</small></div>
-        <button class="map-btn" style="flex:0;padding:8px 14px" onclick="showPwHint()">🔍 Pista</button>
-      </div>
-      <div class="set-row">
-        <div><label>Cerrar sesión</label><small>Pide contraseña al volver a entrar</small></div>
-        <button class="map-btn" style="flex:0;padding:8px 14px;color:var(--wrong)" onclick="lockApp()">🔒 Bloquear</button>
-      </div>
-    </div>
-    <div class="set-group">
-      <div class="set-gtitle">Municipio y zona</div>
-      <div class="set-row">
-        <div><label>Municipio activo</label></div>
-        <select class="sel"><option value="marbella">Marbella</option><option>Personalizado</option></select>
-      </div>
-      <div class="set-row">
-        <div><label>Zona por defecto</label></div>
-        <select class="sel" id="sZona">
-          <option value="all">Todo el municipio</option>
-          <option value="marbella">Marbella ciudad</option>
-          <option value="sanpedro">San Pedro Alcántara</option>
-          <option value="nueva">Nueva Andalucía</option>
-          <option value="benahavis">Benahavís</option>
-          <option value="elviria">Elviria / Las Chapas</option>
-          <option value="istan">Istán / Ojén</option>
-        </select>
-      </div>
-    </div>
-    <div class="set-group">
-      <div class="set-gtitle">Examen</div>
-      <div class="set-row">
-        <div><label>Preguntas por test</label></div>
-        <select class="sel" id="sNum"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="50">50</option></select>
-      </div>
-      <div class="set-row">
-        <div><label>Tiempo por pregunta</label><small>Solo modo simulacro</small></div>
-        <select class="sel" id="sTimer"><option value="0">Sin límite</option><option value="30">30 seg</option><option value="45" selected>45 seg</option><option value="60">60 seg</option><option value="90">90 seg</option></select>
-      </div>
-      <div class="set-row">
-        <div><label>Mapa en modo práctica</label></div>
-        <button class="toggle on" id="tMap" onclick="this.classList.toggle('on')"></button>
-      </div>
-      <div class="set-row">
-        <div><label>Respetar sentido único</label><small>No permite ir en dirección contraria</small></div>
-        <button class="toggle on"></button>
-      </div>
-    </div>
-    <div class="set-group">
-      <div class="set-gtitle">Datos y mapa</div>
-      <div class="set-row">
-        <div><label>Actualizar desde OSM</label><small>Requiere conexión a internet</small></div>
-        <button class="map-btn" style="flex:0;padding:8px 14px" onclick="loadOSM()">⬇ Sync</button>
-      </div>
-      <div class="set-row">
-        <div><label>Resetear estadísticas</label></div>
-        <button class="map-btn" style="flex:0;padding:8px 14px;color:var(--wrong)" onclick="resetStats()">🗑 Borrar</button>
-      </div>
-    </div>
-    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted)">
-      Bomberos Marbella v2.0 · PWA · OSM<br>
-      <span id="bankInfo"></span>
-    </div>
-  </div>
-</div>
-
-<!-- CANCEL MODAL -->
-<div class="modal-overlay" id="cancelModal">
-  <div class="modal">
-    <h3>⚠️ SALIR</h3>
-    <p>¿Seguro que quieres abandonar el examen? Se perderá el progreso actual.</p>
-    <div class="modal-btns">
-      <button class="modal-btn danger" onclick="doCancel()">Sí, salir al menú</button>
-      <button class="modal-btn ghost" onclick="closeModal()">Continuar el examen</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-/* ══════════════════════════════════════
-   PASSWORD SYSTEM — alfanumérico
-   Contraseña por defecto: Bomberos24
-   Cámbiala en Configuración → Seguridad
-══════════════════════════════════════ */
-// Password loaded from config.js (edit that file in GitHub to change it)
-const DEFAULT_PW = (window.APP_CONFIG && window.APP_CONFIG.password) || 'Bomberos24';
-let currentPw = DEFAULT_PW;
 let pwLocked = !sessionStorage.getItem('unlocked');
 let pwVisible = false;
 
@@ -1360,8 +685,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Peral</strong> en el casco antiguo conecta con:",
-    opts:["C/ Málaga y C/ San Francisco","Paseo Marítimo y C/ Huerta Chica","Av. Ricardo Soriano y Plaza de los Naranjos"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Peral es la bajada principal del casco histórico y conecta Av. Ricardo Soriano con el entorno de la Plaza de los Naranjos.",
+    opts:["Av. Ricardo Soriano y Plaza de los Naranjos","Paseo Marítimo y C/ Huerta Chica","C/ Málaga y C/ San Francisco"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Peral es la bajada principal del casco histórico y conecta Av. Ricardo Soriano con el entorno de la Plaza de los Naranjos.",
     route:{c:[36.5099,-4.8848],z:16,from:[36.5095,-4.8850],to:[36.5101,-4.8846],path:[[36.5095,-4.8850],[36.5099,-4.8848],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -1372,8 +697,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Ramón y Cajal</strong> conecta con el Paseo Marítimo a través de:",
-    opts:["C/ Huerta Chica","C/ Jacinto Benavente","C/ Notario Luis Oliver"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Ramón y Cajal baja hacia el mar y conecta con el Paseo Marítimo por C/ Notario Luis Oliver, que es sentido único.",
+    opts:["C/ Notario Luis Oliver","C/ Jacinto Benavente","C/ Huerta Chica"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Ramón y Cajal baja hacia el mar y conecta con el Paseo Marítimo por C/ Notario Luis Oliver, que es sentido único.",
     route:{c:[36.5110,-4.8820],z:16,from:[36.5140,-4.8840],to:[36.5080,-4.8800],path:[[36.5140,-4.8840],[36.5110,-4.8820],[36.5080,-4.8800]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -1384,14 +709,14 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Jacinto Benavente</strong> conecta con:",
-    opts:["Av. Ricardo Soriano y Paseo Marítimo","N-340 y C/ Trapiche","Av. Miguel Cano y MA-20"],
-    ok:2, expl:"<b>Respuesta a):</b> Ctra. de Ojén (Parque de Bomberos) conecta con Av. Miguel Cano y la MA-20 (Ronda de Marbella).",
+    opts:["Av. Miguel Cano y MA-20","N-340 y C/ Trapiche","Av. Ricardo Soriano y Paseo Marítimo"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Jacinto Benavente (zona Parque de Bomberos) conecta con Av. Miguel Cano y la MA-20 (Ronda de Marbella).",
     route:{c:[36.5135,-4.8823],z:16,from:[36.5140,-4.8825],to:[36.5130,-4.8820],path:[[36.5140,-4.8825],[36.5135,-4.8823],[36.5130,-4.8820]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>Av. Severo Ochoa</strong> conecta con:",
-    opts:["Paseo Marítimo, C/ Ramón y Cajal y Av. del Mar","MA-20, C/ Trapiche y C/ Juan de la Cierva","Av. Ricardo Soriano, N-340 y acceso A-7 km 176"],
-    ok:2, expl:"<b>Respuesta a):</b> Av. Severo Ochoa es la vía principal este-oeste y conecta Av. Ricardo Soriano con la N-340 y el acceso a la A-7 por el km 176.",
+    opts:["Av. Ricardo Soriano, N-340 y acceso A-7 km 176","MA-20, C/ Trapiche y C/ Juan de la Cierva","Paseo Marítimo, C/ Ramón y Cajal y Av. del Mar"],
+    ok:0, expl:"<b>Respuesta a):</b> Av. Severo Ochoa es la vía principal este-oeste y conecta Av. Ricardo Soriano con la N-340 y el acceso a la A-7 por el km 176.",
     route:{c:[36.5092,-4.8785],z:15,from:[36.5095,-4.8850],to:[36.5089,-4.8721],path:[[36.5095,-4.8850],[36.5092,-4.8785],[36.5089,-4.8721]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -1408,26 +733,26 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>MA-20</strong> (Ronda de Marbella) conecta:",
-    opts:["Av. Severo Ochoa con San Pedro por la costa","N-340 con el Paseo Marítimo por el sur","A-7 Oeste con A-7 Este por el norte del casco urbano"],
-    ok:2, expl:"<b>Respuesta a):</b> La MA-20 es la vía de circunvalación norte que une los dos extremos de la A-7 rodeando el casco urbano de Marbella por el norte.",
+    opts:["A-7 Oeste con A-7 Este por el norte del casco urbano","N-340 con el Paseo Marítimo por el sur","Av. Severo Ochoa con San Pedro por la costa"],
+    ok:0, expl:"<b>Respuesta a):</b> La MA-20 es la vía de circunvalación norte que une los dos extremos de la A-7 rodeando el casco urbano de Marbella por el norte.",
     route:{c:[36.5180,-4.8850],z:14,from:[36.5200,-4.9000],to:[36.5150,-4.8700],path:[[36.5200,-4.9000],[36.5180,-4.8850],[36.5150,-4.8700]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Trapiche</strong> conecta con:",
-    opts:["C/ Jacinto Benavente y MA-20","Av. Juan de la Cierva y acceso A-7","Av. del Mar y Paseo Marítimo"],
-    ok:1, expl:"<b>Respuesta a):</b> C/ Trapiche (Av. Trapiche) es la vía de acceso a la zona norte y conecta con Av. Juan de la Cierva y el nudo de la A-7.",
+    opts:["Av. Juan de la Cierva y acceso A-7","Av. del Mar y Paseo Marítimo","C/ Jacinto Benavente y MA-20"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Trapiche (Av. Trapiche) es la vía de acceso a la zona norte y conecta con Av. Juan de la Cierva y el nudo de la A-7.",
     route:{c:[36.5185,-4.8870],z:15,from:[36.5160,-4.8870],to:[36.5210,-4.8870],path:[[36.5160,-4.8870],[36.5185,-4.8870],[36.5210,-4.8870]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"El <strong>Paseo Marítimo de Marbella</strong> conecta:",
-    opts:["N-340 con la A-7 por la costa","Puerto deportivo con playa de La Bajadilla en dirección Este","Av. Severo Ochoa con Av. del Mar por el norte"],
-    ok:1, expl:"<b>Respuesta a):</b> El Paseo Marítimo discurre por la costa conectando el Puerto Deportivo al oeste con la zona de La Bajadilla hacia el este.",
+    opts:["Puerto deportivo con playa de La Bajadilla en dirección Este","N-340 con la A-7 por la costa","Av. Severo Ochoa con Av. del Mar por el norte"],
+    ok:0, expl:"<b>Respuesta a):</b> El Paseo Marítimo discurre por la costa conectando el Puerto Deportivo al oeste con la zona de La Bajadilla hacia el este.",
     route:{c:[36.5088,-4.8840],z:15,from:[36.5090,-4.8890],to:[36.5083,-4.8780],path:[[36.5090,-4.8890],[36.5088,-4.8840],[36.5083,-4.8780]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Notario Luis Oliver</strong> conecta:",
-    opts:["Av. Ricardo Soriano con Av. del Mar","C/ Peral con la Plaza de los Naranjos","C/ Ramón y Cajal con el Paseo Marítimo"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Notario Luis Oliver es la bajada de C/ Ramón y Cajal hasta el Paseo Marítimo, de sentido único.",
+    opts:["C/ Ramón y Cajal con el Paseo Marítimo","Av. Ricardo Soriano con Av. del Mar","C/ Peral con la Plaza de los Naranjos"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Notario Luis Oliver es la bajada de C/ Ramón y Cajal hasta el Paseo Marítimo, de sentido único.",
     route:{c:[36.5105,-4.8818],z:16,from:[36.5130,-4.8825],to:[36.5083,-4.8810],path:[[36.5130,-4.8825],[36.5105,-4.8818],[36.5083,-4.8810]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -1439,38 +764,38 @@ const PREGUNTAS = [
   { zone:"marbella", tipo:"conectividad",
     text:"La <strong>C/ Miguel Cano</strong> conecta con:",
     opts:["C/ Jacinto Benavente y Av. del Mar","Av. Ricardo Soriano y C/ Peral","MA-20 y C/ Trapiche"],
-    ok:0, expl:"<b>Respuesta a):</b> C/ Miguel Cano conecta Ctra. de Ojén (zona Parque de Bomberos) con Av. del Mar, siendo acceso clave en emergencias.",
+    ok:0, expl:"<b>Respuesta a):</b> C/ Miguel Cano conecta C/ Jacinto Benavente (zona bomberos) con Av. del Mar, siendo acceso clave en emergencias.",
     route:{c:[36.5118,-4.8840],z:16,from:[36.5130,-4.8822],to:[36.5108,-4.8858],path:[[36.5130,-4.8822],[36.5118,-4.8840],[36.5108,-4.8858]]}},
 
   // ── Ubicación ──
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Parque de Bomberos de Marbella</strong> está en:",
-    opts:["Av. Severo Ochoa, junto al hospital","C/ Jacinto Benavente, junto a la MA-20","Ctra. de Ojén s/n, junto al C.C. La Cañada"],
-    ok:2, expl:"<b>Respuesta c):</b> El Parque de Bomberos de Marbella está en la Carretera de Ojén s/n, en las proximidades del Centro Comercial La Cañada.",
-    route:{c:[36.5258,-4.9012],z:15,from:[36.5260,-4.9015],to:[36.5256,-4.9009],path:[[36.5260,-4.9015],[36.5258,-4.9012],[36.5256,-4.9009]]}},
+    opts:["C/ Jacinto Benavente, junto a la MA-20","Av. Severo Ochoa, junto al hospital","Av. del Trapiche, zona norte"],
+    ok:0, expl:"<b>Respuesta a):</b> El Parque de Bomberos de Marbella se encuentra en C/ Jacinto Benavente, junto a la MA-20 en la zona norte del casco urbano.",
+    route:{c:[36.5135,-4.8822],z:15,from:[36.5138,-4.8825],to:[36.5132,-4.8820],path:[[36.5138,-4.8825],[36.5135,-4.8822],[36.5132,-4.8820]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Hospital Costa del Sol</strong> está ubicado en:",
-    opts:["Paseo Marítimo Este, zona Elviria","Av. Severo Ochoa, km 176 de la A-7","Av. Ricardo Soriano, centro de Marbella"],
-    ok:1, expl:"<b>Respuesta a):</b> El Hospital Costa del Sol está en Av. Severo Ochoa, próximo a la salida 176 de la A-7.",
+    opts:["Av. Severo Ochoa, km 176 de la A-7","Paseo Marítimo Este, zona Elviria","Av. Ricardo Soriano, centro de Marbella"],
+    ok:0, expl:"<b>Respuesta a):</b> El Hospital Costa del Sol está en Av. Severo Ochoa, próximo a la salida 176 de la A-7.",
     route:{c:[36.5089,-4.8721],z:15,from:[36.5092,-4.8730],to:[36.5086,-4.8712],path:[[36.5092,-4.8730],[36.5089,-4.8721],[36.5086,-4.8712]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"La <strong>Plaza de los Naranjos</strong> está en:",
-    opts:["Zona norte junto a la MA-20","Paseo Marítimo, frente al puerto","Casco antiguo de Marbella, zona peatonal"],
-    ok:2, expl:"<b>Respuesta a):</b> La Plaza de los Naranjos es el corazón del casco histórico de Marbella, en zona peatonal de acceso restringido.",
+    opts:["Casco antiguo de Marbella, zona peatonal","Zona norte junto a la MA-20","Paseo Marítimo, frente al puerto"],
+    ok:0, expl:"<b>Respuesta a):</b> La Plaza de los Naranjos es el corazón del casco histórico de Marbella, en zona peatonal de acceso restringido.",
     route:{c:[36.5101,-4.8846],z:16,from:[36.5103,-4.8848],to:[36.5099,-4.8844],path:[[36.5103,-4.8848],[36.5101,-4.8846],[36.5099,-4.8844]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Puerto Deportivo de Marbella</strong> está en:",
-    opts:["Av. Severo Ochoa, zona este","Extremo suroeste del paseo marítimo, Av. José Meliá","Junto a la N-340, salida Marbella Oeste"],
-    ok:1, expl:"<b>Respuesta a):</b> El Puerto Deportivo de Marbella se encuentra en el extremo suroeste del paseo marítimo, con acceso por Av. José Meliá.",
+    opts:["Extremo suroeste del paseo marítimo, Av. José Meliá","Av. Severo Ochoa, zona este","Junto a la N-340, salida Marbella Oeste"],
+    ok:0, expl:"<b>Respuesta a):</b> El Puerto Deportivo de Marbella se encuentra en el extremo suroeste del paseo marítimo, con acceso por Av. José Meliá.",
     route:{c:[36.5091,-4.8866],z:15,from:[36.5095,-4.8870],to:[36.5087,-4.8862],path:[[36.5095,-4.8870],[36.5091,-4.8866],[36.5087,-4.8862]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Palacio de Ferias y Congresos (FYCMA)</strong> está en:",
-    opts:["Av. del Mar, frente al paseo marítimo","Av. Juan de la Cierva, zona norte","Av. Severo Ochoa, junto a la salida 176 de la A-7"],
-    ok:2, expl:"<b>Respuesta a):</b> El FYCMA (Palacio de Ferias y Congresos) se encuentra en Av. Severo Ochoa, próximo a la salida 176 de la A-7.",
+    opts:["Av. Severo Ochoa, junto a la salida 176 de la A-7","Av. del Mar, frente al paseo marítimo","Av. Juan de la Cierva, zona norte"],
+    ok:0, expl:"<b>Respuesta a):</b> El FYCMA (Palacio de Ferias y Congresos) se encuentra en Av. Severo Ochoa, próximo a la salida 176 de la A-7.",
     route:{c:[36.5089,-4.8721],z:15,from:[36.5092,-4.8728],to:[36.5086,-4.8714],path:[[36.5092,-4.8728],[36.5089,-4.8721],[36.5086,-4.8714]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -1481,8 +806,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"La <strong>Rotonda de la Constitución</strong> está en:",
-    opts:["Cruce de MA-20 con C/ Jacinto Benavente","Cruce de Av. Ricardo Soriano con Av. del Mar","Cruce de Av. Severo Ochoa con Av. Arias de Velasco y N-340"],
-    ok:2, expl:"<b>Respuesta a):</b> La Rotonda de la Constitución está en el cruce de Av. Severo Ochoa con Av. Arias de Velasco y la N-340.",
+    opts:["Cruce de Av. Severo Ochoa con Av. Arias de Velasco y N-340","Cruce de Av. Ricardo Soriano con Av. del Mar","Cruce de MA-20 con C/ Jacinto Benavente"],
+    ok:0, expl:"<b>Respuesta a):</b> La Rotonda de la Constitución está en el cruce de Av. Severo Ochoa con Av. Arias de Velasco y la N-340.",
     route:{c:[36.5097,-4.8748],z:15,from:[36.5100,-4.8752],to:[36.5094,-4.8744],path:[[36.5100,-4.8752],[36.5097,-4.8748],[36.5094,-4.8744]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -1499,8 +824,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"El <strong>Ayuntamiento de Marbella</strong> está en:",
-    opts:["Av. Ricardo Soriano, centro","Av. Severo Ochoa, zona hospital","Plaza de los Naranjos, casco antiguo"],
-    ok:2, expl:"<b>Respuesta a):</b> El Ayuntamiento de Marbella se encuentra en la Plaza de los Naranjos, en el corazón del casco histórico.",
+    opts:["Plaza de los Naranjos, casco antiguo","Av. Severo Ochoa, zona hospital","Av. Ricardo Soriano, centro"],
+    ok:0, expl:"<b>Respuesta a):</b> El Ayuntamiento de Marbella se encuentra en la Plaza de los Naranjos, en el corazón del casco histórico.",
     route:{c:[36.5101,-4.8846],z:16,from:[36.5103,-4.8848],to:[36.5099,-4.8844],path:[[36.5103,-4.8848],[36.5101,-4.8846],[36.5099,-4.8844]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -1517,21 +842,21 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"La <strong>Urb. Los Monteros</strong> está en:",
-    opts:["Puerto Banús, junto al bulevar","Zona Norte, junto a la MA-20","Zona Este de Marbella, km 183 de la A-7"],
-    ok:2, expl:"<b>Respuesta a):</b> Los Monteros está en la zona Este de Marbella, aproximadamente en el km 183 de la A-7.",
+    opts:["Zona Este de Marbella, km 183 de la A-7","Zona Norte, junto a la MA-20","Puerto Banús, junto al bulevar"],
+    ok:0, expl:"<b>Respuesta a):</b> Los Monteros está en la zona Este de Marbella, aproximadamente en el km 183 de la A-7.",
     route:{c:[36.5015,-4.8480],z:14,from:[36.5020,-4.8490],to:[36.5010,-4.8470],path:[[36.5020,-4.8490],[36.5015,-4.8480],[36.5010,-4.8470]]}},
 
   // ── Rutas ──
   { zone:"marbella", tipo:"ruta",
-    text:"Desde el <strong>Parque de Bomberos</strong> (Ctra. de Ojén, La Cañada) hasta el <strong>Hospital Costa del Sol</strong>, la ruta más rápida es:",
-    opts:["Ctra. Ojén → N-340 → Centro urbano → Av. Severo Ochoa","Ctra. Ojén → MA-20 → A-7 → Salida 176 → Av. Severo Ochoa","Ctra. Ojén → Av. del Trapiche → Av. Severo Ochoa"],
-    ok:1, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 hasta la salida 176 hacia Av. Severo Ochoa es la ruta más rápida, evitando el tráfico del centro.",
+    text:"Desde el <strong>Parque de Bomberos</strong> (C/ Jacinto Benavente) hasta el <strong>Hospital Costa del Sol</strong>, la ruta más rápida es:",
+    opts:["C/ Jacinto Benavente → MA-20 → A-7 → Salida 176 → Av. Severo Ochoa","C/ Jacinto Benavente → Av. Miguel Cano → Av. del Mar → Av. Severo Ochoa","MA-20 → N-340 → Centro urbano → Av. Severo Ochoa"],
+    ok:0, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 hasta la salida 176 hacia Av. Severo Ochoa es la ruta más rápida, evitando el tráfico del centro.",
     route:{c:[36.5130,-4.8780],z:14,from:[36.5135,-4.8822],to:[36.5089,-4.8721],path:[[36.5135,-4.8822],[36.5165,-4.8800],[36.5089,-4.8721]]}},
 
   { zone:"marbella", tipo:"ruta",
-    text:"Desde la <strong>Plaza de los Naranjos</strong> hasta el <strong>Parque de Bomberos</strong> (Ctra. Ojén), la ruta más directa es:",
-    opts:["Paseo Marítimo → N-340 → MA-20 → Ctra. Ojén","C/ Peral → Av. Ricardo Soriano → Av. del Trapiche → MA-20 → Ctra. Ojén","Av. Ricardo Soriano → N-340 → MA-20 → Ctra. Ojén"],
-    ok:2, expl:"<b>Respuesta b):</b> Desde el casco antiguo, Av. Ricardo Soriano conecta con la N-340, que lleva a la MA-20 y de ahí a la Ctra. de Ojén donde está el Parque de Bomberos.",
+    text:"Desde la <strong>Plaza de los Naranjos</strong> hasta el <strong>Parque de Bomberos</strong>, la ruta más directa es:",
+    opts:["C/ Peral → Av. Ricardo Soriano → C/ Jacinto Benavente","Paseo Marítimo → Av. del Mar → C/ Jacinto Benavente","C/ Nueva → Av. Severo Ochoa → MA-20 → C/ Jacinto Benavente"],
+    ok:0, expl:"<b>Respuesta a):</b> Bajando por C/ Peral a Av. Ricardo Soriano y tomando C/ Jacinto Benavente es la ruta más corta desde el casco antiguo.",
     route:{c:[36.5115,-4.8835],z:15,from:[36.5101,-4.8846],to:[36.5135,-4.8822],path:[[36.5101,-4.8846],[36.5095,-4.8850],[36.5135,-4.8822]]}},
 
   { zone:"marbella", tipo:"ruta",
@@ -1548,8 +873,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ruta",
     text:"Para ir del <strong>Hospital Costa del Sol</strong> a la <strong>Urb. El Rosario</strong> (km 185 A-7), la ruta más rápida es:",
-    opts:["Av. Severo Ochoa → N-340 dirección Este → El Rosario","Av. Severo Ochoa → A-7 dirección Este → Salida km 185","MA-20 → N-340 → Paseo Marítimo Este → El Rosario"],
-    ok:1, expl:"<b>Respuesta a):</b> Desde el hospital se toma Av. Severo Ochoa, se incorpora a la A-7 dirección Este y se sale en el km 185 para El Rosario.",
+    opts:["Av. Severo Ochoa → A-7 dirección Este → Salida km 185","Av. Severo Ochoa → N-340 dirección Este → El Rosario","MA-20 → N-340 → Paseo Marítimo Este → El Rosario"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde el hospital se toma Av. Severo Ochoa, se incorpora a la A-7 dirección Este y se sale en el km 185 para El Rosario.",
     route:{c:[36.5050,-4.8560],z:13,from:[36.5089,-4.8721],to:[36.5020,-4.8400],path:[[36.5089,-4.8721],[36.5060,-4.8600],[36.5020,-4.8400]]}},
 
   { zone:"marbella", tipo:"ruta",
@@ -1559,7 +884,7 @@ const PREGUNTAS = [
     route:{c:[36.5094,-4.8815],z:15,from:[36.5097,-4.8748],to:[36.5091,-4.8866],path:[[36.5097,-4.8748],[36.5095,-4.8850],[36.5088,-4.8858],[36.5091,-4.8866]]}},
 
   { zone:"marbella", tipo:"ruta",
-    text:"Incendio en la <strong>Urb. Los Monteros</strong> (km 183 A-7). Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén) la ruta más rápida es:",
+    text:"Incendio en la <strong>Urb. Los Monteros</strong> (km 183 A-7). Desde el Parque de Bomberos la ruta más rápida es:",
     opts:["MA-20 → A-7 dirección Este → Salida km 183","N-340 dirección Este todo el trayecto","Av. Severo Ochoa → A-7 Este → Salida km 183"],
     ok:0, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 se incorpora a la A-7 dirección Este. La salida km 183 da acceso directo a Los Monteros.",
     route:{c:[36.5080,-4.8620],z:13,from:[36.5135,-4.8822],to:[36.5015,-4.8480],path:[[36.5135,-4.8822],[36.5165,-4.8800],[36.5015,-4.8480]]}},
@@ -1578,8 +903,8 @@ const PREGUNTAS = [
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"Desde <strong>C/ Castilla</strong>, ¿a cuáles de estas calles puedo acceder?",
-    opts:["Cataluña, Aragón, Galicia","Ambas son correctas","Navarra, Asturias"],
-    ok:1, expl:"<b>Respuesta c):</b> Desde C/ Castilla se accede tanto a Cataluña-Aragón-Galicia como a Navarra-Asturias, ya que conecta con varias vías de Los Catalanes.",
+    opts:["Cataluña, Aragón, Galicia","Navarra, Asturias","Ambas son correctas"],
+    ok:2, expl:"<b>Respuesta c):</b> Desde C/ Castilla se accede tanto a Cataluña-Aragón-Galicia como a Navarra-Asturias, ya que conecta con varias vías de Los Catalanes.",
     route:{c:[36.4928,-4.9758],z:16,from:[36.4920,-4.9760],to:[36.4945,-4.9755],path:[[36.4920,-4.9760],[36.4933,-4.9757],[36.4945,-4.9755]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
@@ -1590,56 +915,56 @@ const PREGUNTAS = [
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>Av. Marquesa de Villapesadilla</strong> conecta directamente con:",
-    opts:["C/ Ramón y Cajal y C/ San Miguel","C/ Lagasca y C/ Sevilla","C/ Cádiz y Bulevar de la Ermita"],
-    ok:1, expl:"<b>Respuesta a):</b> La Av. Marquesa de Villapesadilla conecta con C/ Lagasca (acceso al Centro de Salud) y C/ Sevilla.",
+    opts:["C/ Lagasca y C/ Sevilla","C/ Ramón y Cajal y C/ San Miguel","C/ Cádiz y Bulevar de la Ermita"],
+    ok:0, expl:"<b>Respuesta a):</b> La Av. Marquesa de Villapesadilla conecta con C/ Lagasca (acceso al Centro de Salud) y C/ Sevilla.",
     route:{c:[36.4945,-4.9786],z:16,from:[36.4940,-4.9790],to:[36.4950,-4.9782],path:[[36.4940,-4.9790],[36.4945,-4.9786],[36.4950,-4.9782]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>Av. del Mediterráneo</strong> en San Pedro discurre en dirección:",
-    opts:["Ambas, tiene tramos en ambas direcciones","Norte-Sur únicamente","Este-Oeste paralela a la costa"],
-    ok:2, expl:"<b>Respuesta a):</b> La Av. del Mediterráneo en San Pedro discurre en sentido Este-Oeste, paralela a la línea de costa.",
+    opts:["Este-Oeste paralela a la costa","Norte-Sur únicamente","Ambas, tiene tramos en ambas direcciones"],
+    ok:0, expl:"<b>Respuesta a):</b> La Av. del Mediterráneo en San Pedro discurre en sentido Este-Oeste, paralela a la línea de costa.",
     route:{c:[36.4875,-4.9810],z:15,from:[36.4875,-4.9850],to:[36.4875,-4.9770],path:[[36.4875,-4.9850],[36.4875,-4.9810],[36.4875,-4.9770]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>Rotonda José Tineo Gil</strong> en San Pedro conecta con:",
-    opts:["C/ Toledo únicamente","C/ Toledo, C/ Álamo y C/ Naranjos","A-397, C/ Toledo y C/ Dr. Espinosa"],
-    ok:2, expl:"<b>Respuesta a):</b> La Rotonda José Tineo Gil conecta con la A-397 (carretera de Ronda), C/ Toledo y C/ Dr. Espinosa.",
+    opts:["A-397, C/ Toledo y C/ Dr. Espinosa","C/ Toledo, C/ Álamo y C/ Naranjos","C/ Toledo únicamente"],
+    ok:0, expl:"<b>Respuesta a):</b> La Rotonda José Tineo Gil conecta con la A-397 (carretera de Ronda), C/ Toledo y C/ Dr. Espinosa.",
     route:{c:[36.4902,-4.9798],z:16,from:[36.4900,-4.9800],to:[36.4905,-4.9795],path:[[36.4900,-4.9800],[36.4902,-4.9798],[36.4905,-4.9795]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>Rotonda del Lidl</strong> en San Pedro conecta con:",
-    opts:["Av. del Mediterráneo y Bulevar de la Ermita","Ambas son correctas","N-340 y Av. Marquesa de Villapesadilla"],
-    ok:1, expl:"<b>Respuesta c):</b> La Rotonda del Lidl conecta con Av. del Mediterráneo, Bulevar de la Ermita, N-340 y Av. Marquesa de Villapesadilla.",
+    opts:["Av. del Mediterráneo y Bulevar de la Ermita","N-340 y Av. Marquesa de Villapesadilla","Ambas son correctas"],
+    ok:2, expl:"<b>Respuesta c):</b> La Rotonda del Lidl conecta con Av. del Mediterráneo, Bulevar de la Ermita, N-340 y Av. Marquesa de Villapesadilla.",
     route:{c:[36.4933,-4.9797],z:16,from:[36.4930,-4.9800],to:[36.4935,-4.9795],path:[[36.4930,-4.9800],[36.4933,-4.9797],[36.4935,-4.9795]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"El <strong>Bulevar de la Ermita</strong> en San Pedro conecta con:",
-    opts:["C/ Lagasca y C/ Sevilla","N-340 y A-7076","Av. del Mediterráneo y Rotonda del Lidl"],
-    ok:2, expl:"<b>Respuesta a):</b> El Bulevar de la Ermita conecta Av. del Mediterráneo con la Rotonda del Lidl, siendo una vía principal del centro de San Pedro.",
+    opts:["Av. del Mediterráneo y Rotonda del Lidl","N-340 y A-7076","C/ Lagasca y C/ Sevilla"],
+    ok:0, expl:"<b>Respuesta a):</b> El Bulevar de la Ermita conecta Av. del Mediterráneo con la Rotonda del Lidl, siendo una vía principal del centro de San Pedro.",
     route:{c:[36.4918,-4.9793],z:16,from:[36.4910,-4.9795],to:[36.4930,-4.9800],path:[[36.4910,-4.9795],[36.4918,-4.9793],[36.4930,-4.9800]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>A-7076</strong> (carretera de Ronda desde San Pedro) parte desde:",
-    opts:["A-7, salida San Pedro","Cruce de la N-340 con la A-397 (Rotonda Tineo Gil)","Centro de San Pedro, Plaza de la Iglesia"],
-    ok:1, expl:"<b>Respuesta a):</b> La A-7076 parte del cruce de la N-340 con la A-397, junto a la Rotonda José Tineo Gil.",
+    opts:["Cruce de la N-340 con la A-397 (Rotonda Tineo Gil)","Centro de San Pedro, Plaza de la Iglesia","A-7, salida San Pedro"],
+    ok:0, expl:"<b>Respuesta a):</b> La A-7076 parte del cruce de la N-340 con la A-397, junto a la Rotonda José Tineo Gil.",
     route:{c:[36.4980,-4.9980],z:14,from:[36.4902,-4.9798],to:[36.5055,-5.0156],path:[[36.4902,-4.9798],[36.4980,-4.9980],[36.5055,-5.0156]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>C/ Lagasca</strong> en San Pedro conecta con:",
-    opts:["N-340 y Rotonda del Lidl","Centro de Salud y Av. Marquesa de Villapesadilla","C/ Cádiz y Bulevar de la Ermita"],
-    ok:1, expl:"<b>Respuesta a):</b> C/ Lagasca da acceso al Centro de Salud de San Pedro y conecta con Av. Marquesa de Villapesadilla.",
+    opts:["Centro de Salud y Av. Marquesa de Villapesadilla","N-340 y Rotonda del Lidl","C/ Cádiz y Bulevar de la Ermita"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Lagasca da acceso al Centro de Salud de San Pedro y conecta con Av. Marquesa de Villapesadilla.",
     route:{c:[36.4948,-4.9784],z:16,from:[36.4945,-4.9787],to:[36.4951,-4.9781],path:[[36.4945,-4.9787],[36.4948,-4.9784],[36.4951,-4.9781]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La <strong>C/ Sevilla</strong> en San Pedro conecta con:",
-    opts:["Bulevar de la Ermita y Av. del Mediterráneo","Rotonda del Lidl y N-340","Av. Marquesa de Villapesadilla y C/ Cádiz"],
-    ok:2, expl:"<b>Respuesta a):</b> C/ Sevilla conecta con Av. Marquesa de Villapesadilla y con C/ Cádiz en la trama urbana de San Pedro.",
+    opts:["Av. Marquesa de Villapesadilla y C/ Cádiz","Rotonda del Lidl y N-340","Bulevar de la Ermita y Av. del Mediterráneo"],
+    ok:0, expl:"<b>Respuesta a):</b> C/ Sevilla conecta con Av. Marquesa de Villapesadilla y con C/ Cádiz en la trama urbana de San Pedro.",
     route:{c:[36.4946,-4.9780],z:16,from:[36.4943,-4.9783],to:[36.4949,-4.9777],path:[[36.4943,-4.9783],[36.4946,-4.9780],[36.4949,-4.9777]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"Desde <strong>C/ Navarra</strong> en San Pedro puedo acceder a:",
-    opts:["C/ Extremadura y C/ Córdoba","Ambas son correctas","Asturias y C/ Castilla"],
-    ok:2, expl:"<b>Respuesta a):</b> Desde C/ Navarra se accede a C/ Asturias y C/ Castilla en la zona residencial de Los Catalanes.",
+    opts:["Asturias y C/ Castilla","C/ Extremadura y C/ Córdoba","Ambas son correctas"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde C/ Navarra se accede a C/ Asturias y C/ Castilla en la zona residencial de Los Catalanes.",
     route:{c:[36.4938,-4.9758],z:16,from:[36.4936,-4.9760],to:[36.4940,-4.9756],path:[[36.4936,-4.9760],[36.4938,-4.9758],[36.4940,-4.9756]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
@@ -1657,14 +982,14 @@ const PREGUNTAS = [
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"El <strong>Centro de Salud de San Pedro</strong> está en:",
-    opts:["C/ Sevilla","Av. Marquesa de Villapesadilla","C/ Lagasca"],
-    ok:2, expl:"<b>Respuesta a):</b> El Centro de Salud de San Pedro se encuentra en C/ Lagasca.",
+    opts:["C/ Lagasca","Av. Marquesa de Villapesadilla","C/ Sevilla"],
+    ok:0, expl:"<b>Respuesta a):</b> El Centro de Salud de San Pedro se encuentra en C/ Lagasca.",
     route:{c:[36.4950,-4.9782],z:16,from:[36.4948,-4.9784],to:[36.4951,-4.9780],path:[[36.4948,-4.9784],[36.4950,-4.9782],[36.4951,-4.9780]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"La <strong>Plaza de la Iglesia</strong> (centro de San Pedro) está en:",
-    opts:["Bulevar de la Ermita, junto al Lidl","Av. del Mediterráneo, frente a la playa","C/ Marqués del Duero, corazón del casco urbano"],
-    ok:2, expl:"<b>Respuesta a):</b> La Plaza de la Iglesia es el núcleo histórico de San Pedro Alcántara, en C/ Marqués del Duero.",
+    opts:["C/ Marqués del Duero, corazón del casco urbano","Av. del Mediterráneo, frente a la playa","Bulevar de la Ermita, junto al Lidl"],
+    ok:0, expl:"<b>Respuesta a):</b> La Plaza de la Iglesia es el núcleo histórico de San Pedro Alcántara, en C/ Marqués del Duero.",
     route:{c:[36.4920,-4.9775],z:16,from:[36.4922,-4.9777],to:[36.4918,-4.9773],path:[[36.4922,-4.9777],[36.4920,-4.9775],[36.4918,-4.9773]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
@@ -1687,33 +1012,33 @@ const PREGUNTAS = [
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"La <strong>Urb. El Ángel</strong> (San Pedro) está en:",
-    opts:["Centro, junto a la Plaza de la Iglesia","Zona norte, acceso desde A-7076","Zona sur, junto a la playa"],
-    ok:1, expl:"<b>Respuesta a):</b> La Urb. El Ángel está en la zona norte de San Pedro, con acceso desde la A-7076 en dirección Ronda.",
+    opts:["Zona norte, acceso desde A-7076","Zona sur, junto a la playa","Centro, junto a la Plaza de la Iglesia"],
+    ok:0, expl:"<b>Respuesta a):</b> La Urb. El Ángel está en la zona norte de San Pedro, con acceso desde la A-7076 en dirección Ronda.",
     route:{c:[36.5010,-4.9850],z:14,from:[36.5008,-4.9852],to:[36.5012,-4.9848],path:[[36.5008,-4.9852],[36.5010,-4.9850],[36.5012,-4.9848]]}},
 
   // ── Rutas ──
   { zone:"sanpedro", tipo:"ruta",
     text:"Desde el <strong>centro de San Pedro</strong> (Plaza de la Iglesia) hasta la <strong>Urb. Guadalmina Alta</strong>, la ruta más rápida es:",
-    opts:["A-7076 norte → desvío Guadalmina","N-340 dirección Algeciras → desvío norte Guadalmina","A-7 dirección Algeciras → Salida 162 → Guadalmina Alta"],
-    ok:2, expl:"<b>Respuesta a):</b> La A-7 dirección Algeciras con salida 162 es la ruta más rápida para acceder a Guadalmina Alta.",
+    opts:["A-7 dirección Algeciras → Salida 162 → Guadalmina Alta","N-340 dirección Algeciras → desvío norte Guadalmina","A-7076 norte → desvío Guadalmina"],
+    ok:0, expl:"<b>Respuesta a):</b> La A-7 dirección Algeciras con salida 162 es la ruta más rápida para acceder a Guadalmina Alta.",
     route:{c:[36.4870,-4.9920],z:14,from:[36.4920,-4.9775],to:[36.4970,-5.0060],path:[[36.4920,-4.9775],[36.4870,-4.9920],[36.4970,-5.0060]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"Desde la <strong>Rotonda del Lidl</strong> hasta la <strong>Urb. Linda Vista Baja</strong>, la ruta más directa es:",
-    opts:["N-340 → A-7 salida 166 → Linda Vista Baja","Av. del Mediterráneo dirección sur → Linda Vista Baja","Bulevar de la Ermita → C/ Lagasca → sur"],
-    ok:1, expl:"<b>Respuesta a):</b> Tomando Av. del Mediterráneo hacia el sur desde la rotonda se llega directamente a Linda Vista Baja.",
+    opts:["Av. del Mediterráneo dirección sur → Linda Vista Baja","N-340 → A-7 salida 166 → Linda Vista Baja","Bulevar de la Ermita → C/ Lagasca → sur"],
+    ok:0, expl:"<b>Respuesta a):</b> Tomando Av. del Mediterráneo hacia el sur desde la rotonda se llega directamente a Linda Vista Baja.",
     route:{c:[36.4888,-4.9802],z:14,from:[36.4933,-4.9797],to:[36.4843,-4.9805],path:[[36.4933,-4.9797],[36.4888,-4.9802],[36.4843,-4.9805]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"Para ir de <strong>San Pedro</strong> a <strong>Benahavís pueblo</strong>, la ruta correcta es:",
-    opts:["A-7 dirección Algeciras → A-7076","Rotonda Tineo Gil → A-7076 norte durante ~7 km","N-340 → MA-428 → Benahavís"],
-    ok:1, expl:"<b>Respuesta a):</b> Desde la Rotonda Tineo Gil se toma la A-7076 dirección norte, llegando a Benahavís en aproximadamente 7 km.",
+    opts:["Rotonda Tineo Gil → A-7076 norte durante ~7 km","A-7 dirección Algeciras → A-7076","N-340 → MA-428 → Benahavís"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde la Rotonda Tineo Gil se toma la A-7076 dirección norte, llegando a Benahavís en aproximadamente 7 km.",
     route:{c:[36.5100,-5.0000],z:13,from:[36.4902,-4.9798],to:[36.5292,-5.0478],path:[[36.4902,-4.9798],[36.5100,-5.0000],[36.5292,-5.0478]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"Incendio en la <strong>Urb. Cancelada</strong>. Desde el Parque de Bomberos de San Pedro la ruta más rápida es:",
-    opts:["Av. del Mediterráneo dirección oeste → Cancelada","N-340 dirección Algeciras hasta Rotonda Cancelada","A-7 dirección Algeciras → Salida 170"],
-    ok:2, expl:"<b>Respuesta b):</b> La A-7 dirección Algeciras con salida 170 es la ruta más rápida para llegar a Cancelada.",
+    opts:["N-340 dirección Algeciras hasta Rotonda Cancelada","A-7 dirección Algeciras → Salida 170","Av. del Mediterráneo dirección oeste → Cancelada"],
+    ok:1, expl:"<b>Respuesta b):</b> La A-7 dirección Algeciras con salida 170 es la ruta más rápida para llegar a Cancelada.",
     route:{c:[36.4870,-4.9880],z:14,from:[36.4900,-4.9800],to:[36.4820,-4.9960],path:[[36.4900,-4.9800],[36.4870,-4.9880],[36.4820,-4.9960]]}},
 
   { zone:"sanpedro", tipo:"ruta",
@@ -1730,20 +1055,20 @@ const PREGUNTAS = [
   // ── Conectividad ──
   { zone:"nueva", tipo:"conectividad",
     text:"La <strong>Rotonda de La Campana</strong> (Nueva Andalucía) conecta con:",
-    opts:["Bulevar Príncipe Alfonso, Urb. Aloha y N-340","Bulevar de La Campana, C/ Los Naranjos y Las Brisas","Av. Julio Iglesias, N-340 y MA-428"],
-    ok:2, expl:"<b>Respuesta a):</b> La Rotonda de La Campana es el nudo principal de Nueva Andalucía y conecta con Av. Julio Iglesias, la N-340 y la MA-428.",
+    opts:["Av. Julio Iglesias, N-340 y MA-428","Bulevar Príncipe Alfonso, Urb. Aloha y N-340","Bulevar de La Campana, C/ Los Naranjos y Las Brisas"],
+    ok:0, expl:"<b>Respuesta a):</b> La Rotonda de La Campana es el nudo principal de Nueva Andalucía y conecta con Av. Julio Iglesias, la N-340 y la MA-428.",
     route:{c:[36.5014,-4.9575],z:15,from:[36.5010,-4.9580],to:[36.5018,-4.9570],path:[[36.5010,-4.9580],[36.5014,-4.9575],[36.5018,-4.9570]]}},
 
   { zone:"nueva", tipo:"conectividad",
     text:"El <strong>Bulevar Príncipe Alfonso de Hohenlohe</strong> conecta:",
-    opts:["San Pedro con Marbella por la costa","Nueva Andalucía con Puerto Banús por el norte del área","La A-7 con Benahavís directamente"],
-    ok:1, expl:"<b>Respuesta a):</b> El Bulevar Príncipe Alfonso conecta la zona de Nueva Andalucía con Puerto Banús, siendo la vía principal del área.",
+    opts:["Nueva Andalucía con Puerto Banús por el norte del área","San Pedro con Marbella por la costa","La A-7 con Benahavís directamente"],
+    ok:0, expl:"<b>Respuesta a):</b> El Bulevar Príncipe Alfonso conecta la zona de Nueva Andalucía con Puerto Banús, siendo la vía principal del área.",
     route:{c:[36.4960,-4.9590],z:15,from:[36.5010,-4.9620],to:[36.4890,-4.9570],path:[[36.5010,-4.9620],[36.4960,-4.9590],[36.4890,-4.9570]]}},
 
   { zone:"nueva", tipo:"conectividad",
     text:"La <strong>Av. Julio Iglesias</strong> conecta:",
-    opts:["MA-428 con Benahavís por el norte","N-340 con San Pedro directamente","Rotonda de La Campana con el acceso a Puerto Banús"],
-    ok:2, expl:"<b>Respuesta a):</b> Av. Julio Iglesias conecta la Rotonda de La Campana con el acceso principal a Puerto Banús.",
+    opts:["Rotonda de La Campana con el acceso a Puerto Banús","N-340 con San Pedro directamente","MA-428 con Benahavís por el norte"],
+    ok:0, expl:"<b>Respuesta a):</b> Av. Julio Iglesias conecta la Rotonda de La Campana con el acceso principal a Puerto Banús.",
     route:{c:[36.4950,-4.9595],z:15,from:[36.5012,-4.9578],to:[36.4895,-4.9577],path:[[36.5012,-4.9578],[36.4950,-4.9595],[36.4895,-4.9577]]}},
 
   { zone:"nueva", tipo:"conectividad",
@@ -1772,8 +1097,8 @@ const PREGUNTAS = [
 
   { zone:"nueva", tipo:"conectividad",
     text:"Desde la <strong>Rotonda de La Campana</strong> hacia el norte, la carretera que sube a Benahavís es:",
-    opts:["A-355","A-7076","MA-428"],
-    ok:2, expl:"<b>Respuesta a):</b> La MA-428 es la carretera que parte de la Rotonda de La Campana hacia el norte en dirección Benahavís.",
+    opts:["MA-428","A-7076","A-355"],
+    ok:0, expl:"<b>Respuesta a):</b> La MA-428 es la carretera que parte de la Rotonda de La Campana hacia el norte en dirección Benahavís.",
     route:{c:[36.5100,-4.9700],z:13,from:[36.5012,-4.9578],to:[36.5180,-5.0050],path:[[36.5012,-4.9578],[36.5100,-4.9700],[36.5180,-5.0050]]}},
 
   // ── Ubicación ──
@@ -1785,39 +1110,39 @@ const PREGUNTAS = [
 
   { zone:"nueva", tipo:"ubicacion",
     text:"El <strong>Puerto Deportivo de Puerto Banús</strong> está en:",
-    opts:["Marbella Este, km 180 de la A-7","Centro de San Pedro, junto al paseo","Extremo sur de Nueva Andalucía, acceso por Av. Julio Iglesias"],
-    ok:2, expl:"<b>Respuesta a):</b> Puerto Banús está en el extremo sur de Nueva Andalucía, con acceso principal por Av. Julio Iglesias.",
+    opts:["Extremo sur de Nueva Andalucía, acceso por Av. Julio Iglesias","Centro de San Pedro, junto al paseo","Marbella Este, km 180 de la A-7"],
+    ok:0, expl:"<b>Respuesta a):</b> Puerto Banús está en el extremo sur de Nueva Andalucía, con acceso principal por Av. Julio Iglesias.",
     route:{c:[36.4890,-4.9577],z:15,from:[36.4893,-4.9580],to:[36.4887,-4.9574],path:[[36.4893,-4.9580],[36.4890,-4.9577],[36.4887,-4.9574]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"La <strong>Urb. La Quinta Golf</strong> está en:",
-    opts:["Sur de Puerto Banús, junto al mar","San Pedro Norte, acceso A-7076","Norte de Nueva Andalucía, acceso por MA-428"],
-    ok:2, expl:"<b>Respuesta a):</b> La Urb. La Quinta Golf está al norte de Nueva Andalucía, con acceso principal por la MA-428.",
+    opts:["Norte de Nueva Andalucía, acceso por MA-428","Sur de Puerto Banús, junto al mar","San Pedro Norte, acceso A-7076"],
+    ok:0, expl:"<b>Respuesta a):</b> La Urb. La Quinta Golf está al norte de Nueva Andalucía, con acceso principal por la MA-428.",
     route:{c:[36.5180,-5.0050],z:14,from:[36.5183,-5.0053],to:[36.5177,-5.0047],path:[[36.5183,-5.0053],[36.5180,-5.0050],[36.5177,-5.0047]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"La <strong>Urb. Aloha Golf</strong> está en:",
-    opts:["Puerto Banús, zona sur","Entre San Pedro y Benahavís","Nueva Andalucía, norte del Bulevar Príncipe Alfonso"],
-    ok:2, expl:"<b>Respuesta a):</b> Aloha Golf está en Nueva Andalucía, al norte del Bulevar Príncipe Alfonso.",
+    opts:["Nueva Andalucía, norte del Bulevar Príncipe Alfonso","Puerto Banús, zona sur","Entre San Pedro y Benahavís"],
+    ok:0, expl:"<b>Respuesta a):</b> Aloha Golf está en Nueva Andalucía, al norte del Bulevar Príncipe Alfonso.",
     route:{c:[36.5040,-4.9640],z:15,from:[36.5042,-4.9642],to:[36.5038,-4.9638],path:[[36.5042,-4.9642],[36.5040,-4.9640],[36.5038,-4.9638]]}},
 
   // ── Rutas ──
   { zone:"nueva", tipo:"ruta",
     text:"Desde <strong>Puerto Banús</strong> hasta la <strong>Urb. La Quinta Golf</strong>, la ruta más rápida es:",
-    opts:["N-340 → San Pedro → A-7076 → La Quinta","A-7 dirección Algeciras → A-7076 → La Quinta","Bulevar Príncipe Alfonso → MA-428 norte → La Quinta"],
-    ok:2, expl:"<b>Respuesta a):</b> Desde Puerto Banús el Bulevar Príncipe Alfonso conecta con la MA-428 que sube directamente a La Quinta.",
+    opts:["Bulevar Príncipe Alfonso → MA-428 norte → La Quinta","A-7 dirección Algeciras → A-7076 → La Quinta","N-340 → San Pedro → A-7076 → La Quinta"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde Puerto Banús el Bulevar Príncipe Alfonso conecta con la MA-428 que sube directamente a La Quinta.",
     route:{c:[36.5000,-4.9750],z:13,from:[36.4890,-4.9577],to:[36.5180,-5.0050],path:[[36.4890,-4.9577],[36.5000,-4.9750],[36.5180,-5.0050]]}},
 
   { zone:"nueva", tipo:"ruta",
     text:"Desde la <strong>Rotonda de La Campana</strong> hasta <strong>Benahavís pueblo</strong>, la ruta es:",
-    opts:["A-7076 desde San Pedro","MA-428 dirección norte durante ~12 km","A-7 → A-7076 norte"],
-    ok:1, expl:"<b>Respuesta a):</b> Desde la Rotonda de La Campana se toma la MA-428 dirección norte hasta llegar a Benahavís en aproximadamente 12 km.",
+    opts:["MA-428 dirección norte durante ~12 km","A-7076 desde San Pedro","A-7 → A-7076 norte"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde la Rotonda de La Campana se toma la MA-428 dirección norte hasta llegar a Benahavís en aproximadamente 12 km.",
     route:{c:[36.5150,-4.9800],z:12,from:[36.5012,-4.9578],to:[36.5292,-5.0478],path:[[36.5012,-4.9578],[36.5150,-4.9800],[36.5292,-5.0478]]}},
 
   { zone:"nueva", tipo:"ruta",
     text:"Incendio en la <strong>Urb. Las Brisas</strong>. Partiendo de la <strong>N-340 en San Pedro dirección Este</strong>, la ruta es:",
-    opts:["A-7 → salida 172 → Bulevar → Las Brisas","N-340 → Rotonda La Campana → Bulevar → acceso Las Brisas","N-340 → Av. Julio Iglesias sur → Las Brisas"],
-    ok:1, expl:"<b>Respuesta a):</b> Siguiendo la N-340 se llega a la Rotonda de La Campana y desde el bulevar se accede a Las Brisas.",
+    opts:["N-340 → Rotonda La Campana → Bulevar → acceso Las Brisas","A-7 → salida 172 → Bulevar → Las Brisas","N-340 → Av. Julio Iglesias sur → Las Brisas"],
+    ok:0, expl:"<b>Respuesta a):</b> Siguiendo la N-340 se llega a la Rotonda de La Campana y desde el bulevar se accede a Las Brisas.",
     route:{c:[36.5018,-4.9550],z:14,from:[36.4878,-4.9748],to:[36.5025,-4.9512],path:[[36.4878,-4.9748],[36.4920,-4.9650],[36.5025,-4.9512]]}},
 
 
@@ -1839,20 +1164,20 @@ const PREGUNTAS = [
 
   { zone:"benahavis", tipo:"ubicacion",
     text:"El pueblo de <strong>Benahavís</strong> está a:",
-    opts:["~15 km al norte de San Pedro por la N-340","~7 km al norte del cruce de la A-7076 con la A-7","~5 km al norte de Nueva Andalucía por la MA-428"],
-    ok:1, expl:"<b>Respuesta a):</b> Benahavís pueblo está a aproximadamente 7 km al norte del cruce de la A-7076 con la A-7.",
+    opts:["~7 km al norte del cruce de la A-7076 con la A-7","~15 km al norte de San Pedro por la N-340","~5 km al norte de Nueva Andalucía por la MA-428"],
+    ok:0, expl:"<b>Respuesta a):</b> Benahavís pueblo está a aproximadamente 7 km al norte del cruce de la A-7076 con la A-7.",
     route:{c:[36.5292,-5.0478],z:13,from:[36.5055,-5.0156],to:[36.5292,-5.0478],path:[[36.5055,-5.0156],[36.5150,-5.0280],[36.5292,-5.0478]]}},
 
   { zone:"benahavis", tipo:"ruta",
     text:"Para acceder a <strong>Benahavís</strong> desde <strong>Ronda</strong>, la carretera que se usa es:",
-    opts:["MA-428 desde Nueva Andalucía","A-397 bajando desde el norte hacia la costa","A-7076 subiendo desde la costa"],
-    ok:1, expl:"<b>Respuesta a):</b> Desde Ronda se accede a Benahavís por la A-397, que baja desde el norte hacia la costa.",
+    opts:["A-397 bajando desde el norte hacia la costa","A-7076 subiendo desde la costa","MA-428 desde Nueva Andalucía"],
+    ok:0, expl:"<b>Respuesta a):</b> Desde Ronda se accede a Benahavís por la A-397, que baja desde el norte hacia la costa.",
     route:{c:[36.6400,-5.0900],z:11,from:[36.7450,-5.1650],to:[36.5292,-5.0478],path:[[36.7450,-5.1650],[36.6400,-5.0900],[36.5292,-5.0478]]}},
 
   { zone:"benahavis", tipo:"ruta",
     text:"Urgencia en <strong>Urb. La Quinta Golf</strong>. Desde <strong>Benahavís pueblo</strong> la ruta más rápida es:",
-    opts:["Bajar por MA-428 → Rotonda La Campana → MA-428 norte","Bajar por A-7076 → A-7 → acceso desde la costa","Bajar por MA-428 dirección sur → desvío La Quinta"],
-    ok:2, expl:"<b>Respuesta a):</b> Bajando por la MA-428 en dirección sur se accede al desvío de La Quinta Golf.",
+    opts:["Bajar por MA-428 dirección sur → desvío La Quinta","Bajar por A-7076 → A-7 → acceso desde la costa","Bajar por MA-428 → Rotonda La Campana → MA-428 norte"],
+    ok:0, expl:"<b>Respuesta a):</b> Bajando por la MA-428 en dirección sur se accede al desvío de La Quinta Golf.",
     route:{c:[36.5220,-5.0200],z:13,from:[36.5292,-5.0478],to:[36.5180,-5.0050],path:[[36.5292,-5.0478],[36.5235,-5.0260],[36.5180,-5.0050]]}},
 
 
@@ -1862,14 +1187,14 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"conectividad",
     text:"La <strong>N-340</strong> en la zona de Elviria discurre:",
-    opts:["Por el norte del municipio junto a la MA-20","Paralela a la A-7 por el sur, con vías de servicio laterales","Por el centro urbano de Marbella"],
-    ok:1, expl:"<b>Respuesta a):</b> La N-340 en la zona Este discurre paralela a la A-7 por el sur, con vías de servicio que dan acceso a las urbanizaciones.",
+    opts:["Paralela a la A-7 por el sur, con vías de servicio laterales","Por el norte del municipio junto a la MA-20","Por el centro urbano de Marbella"],
+    ok:0, expl:"<b>Respuesta a):</b> La N-340 en la zona Este discurre paralela a la A-7 por el sur, con vías de servicio que dan acceso a las urbanizaciones.",
     route:{c:[36.4990,-4.8310],z:14,from:[36.5008,-4.8400],to:[36.4975,-4.8220],path:[[36.5008,-4.8400],[36.4990,-4.8310],[36.4975,-4.8220]]}},
 
   { zone:"elviria", tipo:"ubicacion",
     text:"La <strong>Urb. Marbesa</strong> está en:",
-    opts:["Zona centro de Marbella, junto al puerto","Zona Elviria, sur de la N-340, acceso por vía de servicio","San Pedro, zona norte"],
-    ok:1, expl:"<b>Respuesta a):</b> La Urb. Marbesa está en la zona de Elviria, al sur de la N-340, con acceso por la vía de servicio.",
+    opts:["Zona Elviria, sur de la N-340, acceso por vía de servicio","Zona centro de Marbella, junto al puerto","San Pedro, zona norte"],
+    ok:0, expl:"<b>Respuesta a):</b> La Urb. Marbesa está en la zona de Elviria, al sur de la N-340, con acceso por la vía de servicio.",
     route:{c:[36.4960,-4.8280],z:15,from:[36.4963,-4.8283],to:[36.4957,-4.8277],path:[[36.4963,-4.8283],[36.4960,-4.8280],[36.4957,-4.8277]]}},
 
   { zone:"elviria", tipo:"ubicacion",
@@ -1880,14 +1205,14 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"ubicacion",
     text:"La <strong>Urb. Río Real</strong> está en:",
-    opts:["Km 180 de la A-7, zona Los Monteros","Km 187 de la A-7, zona Este de Marbella","Km 193 de la A-7, zona Las Chapas"],
-    ok:1, expl:"<b>Respuesta a):</b> La Urb. Río Real está aproximadamente en el km 187 de la A-7, en la zona Este de Marbella.",
+    opts:["Km 187 de la A-7, zona Este de Marbella","Km 180 de la A-7, zona Los Monteros","Km 193 de la A-7, zona Las Chapas"],
+    ok:0, expl:"<b>Respuesta a):</b> La Urb. Río Real está aproximadamente en el km 187 de la A-7, en la zona Este de Marbella.",
     route:{c:[36.5005,-4.8320],z:15,from:[36.5008,-4.8323],to:[36.5002,-4.8317],path:[[36.5008,-4.8323],[36.5005,-4.8320],[36.5002,-4.8317]]}},
 
   { zone:"elviria", tipo:"ubicacion",
     text:"La <strong>Urb. Las Chapas</strong> está en:",
-    opts:["Km 185, zona El Rosario","Km 190-192 de la A-7, zona más Este de Marbella","Km 183, zona Los Monteros"],
-    ok:1, expl:"<b>Respuesta a):</b> Las Chapas está en la zona más oriental del término municipal de Marbella, entre los km 190-192 de la A-7.",
+    opts:["Km 190-192 de la A-7, zona más Este de Marbella","Km 183, zona Los Monteros","Km 185, zona El Rosario"],
+    ok:0, expl:"<b>Respuesta a):</b> Las Chapas está en la zona más oriental del término municipal de Marbella, entre los km 190-192 de la A-7.",
     route:{c:[36.4972,-4.8200],z:14,from:[36.4975,-4.8203],to:[36.4969,-4.8197],path:[[36.4975,-4.8203],[36.4972,-4.8200],[36.4969,-4.8197]]}},
 
   { zone:"elviria", tipo:"ruta",
@@ -1897,9 +1222,9 @@ const PREGUNTAS = [
     route:{c:[36.5030,-4.8460],z:13,from:[36.5089,-4.8721],to:[36.5005,-4.8320],path:[[36.5089,-4.8721],[36.5060,-4.8600],[36.5005,-4.8320]]}},
 
   { zone:"elviria", tipo:"ruta",
-    text:"Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén, La Cañada) hasta <strong>Urb. Las Chapas</strong>, la ruta más rápida es:",
-    opts:["Av. Severo Ochoa → N-340 Este → Las Chapas","N-340 dirección Este todo el trayecto","MA-20 → A-7 dirección Este → Salida Las Chapas"],
-    ok:2, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 dirección Este se llega a Las Chapas por su propia salida.",
+    text:"Desde el <strong>Parque de Bomberos de Marbella</strong> hasta <strong>Urb. Las Chapas</strong>, la ruta más rápida es:",
+    opts:["MA-20 → A-7 dirección Este → Salida Las Chapas","N-340 dirección Este todo el trayecto","Av. Severo Ochoa → N-340 Este → Las Chapas"],
+    ok:0, expl:"<b>Respuesta a):</b> Saliendo por la MA-20 y tomando la A-7 dirección Este se llega a Las Chapas por su propia salida.",
     route:{c:[36.5000,-4.8500],z:13,from:[36.5135,-4.8822],to:[36.4972,-4.8200],path:[[36.5135,-4.8822],[36.5160,-4.8700],[36.4972,-4.8200]]}},
 
 
@@ -1921,38 +1246,38 @@ const PREGUNTAS = [
 
   { zone:"istan", tipo:"ubicacion",
     text:"El pueblo de <strong>Ojén</strong> está al:",
-    opts:["Norte de San Pedro, acceso por A-7076","Norte de Marbella, acceso por A-355 con desvío","Norte de Estepona, acceso por A-7"],
-    ok:1, expl:"<b>Respuesta a):</b> Ojén está al norte de Marbella, con su propio desvío desde la A-355.",
+    opts:["Norte de Marbella, acceso por A-355 con desvío","Norte de San Pedro, acceso por A-7076","Norte de Estepona, acceso por A-7"],
+    ok:0, expl:"<b>Respuesta a):</b> Ojén está al norte de Marbella, con su propio desvío desde la A-355.",
     route:{c:[36.5800,-4.8500],z:13,from:[36.5803,-4.8503],to:[36.5797,-4.8497],path:[[36.5803,-4.8503],[36.5800,-4.8500],[36.5797,-4.8497]]}},
 
   { zone:"istan", tipo:"ruta",
-    text:"Urgencia en <strong>Istán</strong>. Desde el <strong>Parque de Bomberos</strong> (Ctra. Ojén) la ruta es:",
-    opts:["MA-20 → A-355 norte → Istán","Av. Severo Ochoa → N-340 → A-355 → Istán","A-7 → N-340 → A-355 → Istán"],
-    ok:1, expl:"<b>Respuesta c):</b> Desde el parque se toma Av. Severo Ochoa a la N-340 y desde allí la A-355 sube directamente a Istán.",
+    text:"Urgencia en <strong>Istán</strong>. Desde el Parque de Bomberos de Marbella la ruta es:",
+    opts:["MA-20 → A-355 norte → Istán","A-7 → N-340 → A-355 → Istán","Av. Severo Ochoa → N-340 → A-355 → Istán"],
+    ok:2, expl:"<b>Respuesta c):</b> Desde el parque se toma Av. Severo Ochoa a la N-340 y desde allí la A-355 sube directamente a Istán.",
     route:{c:[36.5420,-4.9180],z:12,from:[36.5135,-4.8822],to:[36.5590,-4.9250],path:[[36.5135,-4.8822],[36.5270,-4.9180],[36.5590,-4.9250]]}},
 
   // ── PREGUNTAS REALES · Temario Bomberos Marbella
   { zone:"marbella", tipo:"ruta",
     text:"Incendio en Hotel Marriott&#39;s Marbella Beach Resort. ¿Cuál es el acceso principal para vehículos pesados?",
-    opts:["A través de la Urbanización Elviria Hills.","Por el vial de servicio de Hacienda de las Chapas.","Salida Elviria (km 192), dirección playa por Avenida Valeriano Rodríguez."],
-    ok:2, expl:"<b>Respuesta B):</b> Salida Elviria (km 192), dirección playa por Avenida Valeriano Rodríguez.",
+    opts:["A través de la Urbanización Elviria Hills.","Salida Elviria (km 192), dirección playa por Avenida Valeriano Rodríguez.","Por el vial de servicio de Hacienda de las Chapas."],
+    ok:1, expl:"<b>Respuesta B):</b> Salida Elviria (km 192), dirección playa por Avenida Valeriano Rodríguez.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"elviria", tipo:"ruta",
     text:"Para llegar a la Urbanización Hacienda de las Chapas desde el centro de Marbella, el cambio de sentido más rápido en la A-7 es:",
-    opts:["Cambio de sentido de Elviria (km 192).","Cambio de sentido de Cabopino (km 194).","Cambio de sentido de Las Chapas (km 191)."],
+    opts:["Cambio de sentido de Cabopino (km 194).","Cambio de sentido de Elviria (km 192).","Cambio de sentido de Las Chapas (km 191)."],
     ok:0, expl:"<b>Respuesta A):</b> Cambio de sentido de Cabopino (km 194).",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"elviria", tipo:"ubicacion",
     text:"¿Qué urbanización se encuentra inmediatamente al norte de la AP-7 a la altura de Elviria?",
-    opts:["Santa María Golf.","La Mairena.","Ricmar."],
-    ok:0, expl:"<b>Respuesta B):</b> Santa María Golf.",
+    opts:["La Mairena.","Santa María Golf.","Ricmar."],
+    ok:1, expl:"<b>Respuesta B):</b> Santa María Golf.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"elviria", tipo:"ubicacion",
     text:"Ubicación del Hotel Don Carlos Resort & Spa:",
-    opts:["Avda. de Valeriano Rodríguez, s/n.","Avda. del Naviero, s/n.","Avda. de las Cumbres, s/n."],
+    opts:["Avda. del Naviero, s/n.","Avda. de Valeriano Rodríguez, s/n.","Avda. de las Cumbres, s/n."],
     ok:1, expl:"<b>Respuesta B):</b> Avda. de Valeriano Rodríguez, s/n.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
@@ -1964,14 +1289,14 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"ruta",
     text:"La Urbanización Artola Alta se caracteriza por sus calles estrechas. ¿Cuál es su vía principal de acceso desde la A-7?",
-    opts:["Avenida de la Reserva.","Calle de las Terrazas.","Calle de los Jardines."],
-    ok:1, expl:"<b>Respuesta A):</b> Calle de las Terrazas.",
+    opts:["Calle de las Terrazas.","Avenida de la Reserva.","Calle de los Jardines."],
+    ok:0, expl:"<b>Respuesta A):</b> Calle de las Terrazas.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Dónde se encuentra el Camping Jorge Juan?",
-    opts:["En la zona de Las Chapas, margen montaña.","En la zona de Elviria, junto al Hotel Don Carlos.","En la zona de Cabopino, margen playa."],
-    ok:2, expl:"<b>Respuesta B):</b> En la zona de Cabopino, margen playa.",
+    opts:["En la zona de Las Chapas, margen montaña.","En la zona de Cabopino, margen playa.","En la zona de Elviria, junto al Hotel Don Carlos."],
+    ok:1, expl:"<b>Respuesta B):</b> En la zona de Cabopino, margen playa.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"elviria", tipo:"ruta",
@@ -1982,20 +1307,20 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"ubicacion",
     text:"¿Qué río atraviesa la zona de las Chapas cerca de la Urbanización Marbesa?",
-    opts:["Río Real.","Río Guadaiza.","Arroyo de la Víbora."],
-    ok:2, expl:"<b>Respuesta B):</b> Arroyo de la Víbora.",
+    opts:["Río Real.","Arroyo de la Víbora.","Río Guadaiza."],
+    ok:1, expl:"<b>Respuesta B):</b> Arroyo de la Víbora.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"elviria", tipo:"ubicacion",
     text:"El Hotel Los Monteros Spa & Golf Resort se sitúa en:",
-    opts:["Urbanización Santa Clara.","Urbanización Bahía de Marbella.","Urbanización Los Monteros, Ctra. Cádiz km 187."],
-    ok:2, expl:"<b>Respuesta A):</b> Urbanización Los Monteros, Ctra. Cádiz km 187.",
+    opts:["Urbanización Los Monteros, Ctra. Cádiz km 187.","Urbanización Bahía de Marbella.","Urbanización Santa Clara."],
+    ok:0, expl:"<b>Respuesta A):</b> Urbanización Los Monteros, Ctra. Cádiz km 187.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"elviria", tipo:"ruta",
     text:"Para acceder a la Urbanización Ricmar (sentido Málaga), ¿cuál es la salida de la A-7?",
-    opts:["Salida Elviria.","Salida Las Chapas/Servicio.","Salida Rosario."],
-    ok:1, expl:"<b>Respuesta C):</b> Salida Las Chapas/Servicio.",
+    opts:["Salida Elviria.","Salida Rosario.","Salida Las Chapas/Servicio."],
+    ok:2, expl:"<b>Respuesta C):</b> Salida Las Chapas/Servicio.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -2006,8 +1331,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Punto de referencia: ¿Dónde está el &quot;Pino de Marbella&quot;?",
-    opts:["Entrada de Cabopino.","Zona de Las Chapas.","Cruce de Elviria."],
-    ok:1, expl:"<b>Respuesta C):</b> Zona de Las Chapas.",
+    opts:["Entrada de Cabopino.","Cruce de Elviria.","Zona de Las Chapas."],
+    ok:2, expl:"<b>Respuesta C):</b> Zona de Las Chapas.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"elviria", tipo:"ruta",
@@ -2018,8 +1343,8 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"ubicacion",
     text:"¿Qué hotel se encuentra en la Urbanización Bahía de Marbella?",
-    opts:["Hotel Los Monteros.","Hotel Gran Meliá Don Pepe.","Hotel Vincci Selección Estrella del Mar."],
-    ok:2, expl:"<b>Respuesta B):</b> Hotel Vincci Selección Estrella del Mar.",
+    opts:["Hotel Los Monteros.","Hotel Vincci Selección Estrella del Mar.","Hotel Gran Meliá Don Pepe."],
+    ok:1, expl:"<b>Respuesta B):</b> Hotel Vincci Selección Estrella del Mar.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"marbella", tipo:"conectividad",
@@ -2042,38 +1367,38 @@ const PREGUNTAS = [
 
   { zone:"elviria", tipo:"ubicacion",
     text:"La Urbanización La Reserva de Marbella se sitúa:",
-    opts:["Entre el Hospital Costa del Sol y Río Real.","Al sur de la A-7, junto al mar.","Al norte de la A-7, entre Las Chapas y Cabopino."],
-    ok:2, expl:"<b>Respuesta A):</b> Al norte de la A-7, entre Las Chapas y Cabopino.",
+    opts:["Al norte de la A-7, entre Las Chapas y Cabopino.","Al sur de la A-7, junto al mar.","Entre el Hospital Costa del Sol y Río Real."],
+    ok:0, expl:"<b>Respuesta A):</b> Al norte de la A-7, entre Las Chapas y Cabopino.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"elviria", tipo:"ruta",
     text:"¿Cuál es el acceso más rápido a la Urbanización El Rosario (lado montaña) desde Marbella Centro?",
-    opts:["N-340 hasta el arco de Marbella.","A-7 dirección Málaga, salida El Rosario.","AP-7 hasta el peaje."],
-    ok:1, expl:"<b>Respuesta A):</b> A-7 dirección Málaga, salida El Rosario.",
+    opts:["A-7 dirección Málaga, salida El Rosario.","N-340 hasta el arco de Marbella.","AP-7 hasta el peaje."],
+    ok:0, expl:"<b>Respuesta A):</b> A-7 dirección Málaga, salida El Rosario.",
     route:{c:[36.499,-4.829],z:15,from:[36.499,-4.829],to:[36.499,-4.829],path:[[36.499,-4.829],[36.499,-4.829]]}},
 
   { zone:"marbella", tipo:"ruta",
     text:"Entrada prioritaria para un BUP al Hospital Quirón Salud:",
-    opts:["Por la zona del Puerto Deportivo.","Por Calle Alfonso XIII.","Por la Avenida Severo Ochoa directamente."],
-    ok:2, expl:"<b>Respuesta A):</b> Por la Avenida Severo Ochoa directamente.",
+    opts:["Por la Avenida Severo Ochoa directamente.","Por Calle Alfonso XIII.","Por la zona del Puerto Deportivo."],
+    ok:0, expl:"<b>Respuesta A):</b> Por la Avenida Severo Ochoa directamente.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Cuál es la vía con mayor limitación de altura para acceder a la Playa de la Bajadilla?",
-    opts:["El arco de entrada al puerto.","El puente de la Avenida Severo Ochoa.","No existen limitaciones significativas."],
-    ok:2, expl:"<b>Respuesta A):</b> El puente de la Avenida Severo Ochoa.",
+    opts:["El puente de la Avenida Severo Ochoa.","El arco de entrada al puerto.","No existen limitaciones significativas."],
+    ok:0, expl:"<b>Respuesta A):</b> El puente de la Avenida Severo Ochoa.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"nueva", tipo:"ruta",
     text:"Para llegar a la Plaza de los Naranjos con un vehículo ligero, la ruta desde el norte es:",
-    opts:["Calle Carmen.","Calle Aduar.","Calle Estación."],
+    opts:["Calle Carmen.","Calle Estación.","Calle Aduar."],
     ok:1, expl:"<b>Respuesta B):</b> Calle Estación.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Dónde se encuentra el Hotel Fuerte Marbella?",
-    opts:["Avenida Fontanilla.","Avenida Ricardo Soriano.","Calle El Fuerte, s/n (junto al Paseo Marítimo)."],
-    ok:2, expl:"<b>Respuesta A):</b> Calle El Fuerte, s/n (junto al Paseo Marítimo).",
+    opts:["Calle El Fuerte, s/n (junto al Paseo Marítimo).","Avenida Ricardo Soriano.","Avenida Fontanilla."],
+    ok:0, expl:"<b>Respuesta A):</b> Calle El Fuerte, s/n (junto al Paseo Marítimo).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -2090,8 +1415,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Para un incendio en el Edificio Alfil (Ricardo Soriano), el mejor emplazamiento para la autoescala es:",
-    opts:["La propia Avenida Ricardo Soriano (carril derecho).","Calle Camilo José Cela.","Calle Nuestra Señora de Gracia."],
-    ok:0, expl:"<b>Respuesta B):</b> La propia Avenida Ricardo Soriano (carril derecho).",
+    opts:["Calle Camilo José Cela.","La propia Avenida Ricardo Soriano (carril derecho).","Calle Nuestra Señora de Gracia."],
+    ok:1, expl:"<b>Respuesta B):</b> La propia Avenida Ricardo Soriano (carril derecho).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -2114,19 +1439,19 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Dónde se encuentra el Centro de Salud de Las Albarizas?",
-    opts:["Calle Magallanes.","Avenida de las Albarizas, s/n.","Calle Juanar."],
-    ok:1, expl:"<b>Respuesta A):</b> Avenida de las Albarizas, s/n.",
+    opts:["Avenida de las Albarizas, s/n.","Calle Magallanes.","Calle Juanar."],
+    ok:0, expl:"<b>Respuesta A):</b> Avenida de las Albarizas, s/n.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Para acceder a la Urbanización Huerta del Prado (encima de la estación de autobuses):",
     opts:["Por la Avenida del Trapiche.","Por la Carretera de Ojén (A-355).","Por la Avenida Arias de Velasco."],
-    ok:2, expl:"<b>Respuesta A):</b> Por la Avenida del Trapiche.",
+    ok:0, expl:"<b>Respuesta A):</b> Por la Avenida del Trapiche.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Qué hotel está situado en la Avenida Fontanilla?",
-    opts:["Hotel Princesa Playa.","Hotel Lima.","Hotel El Faro."],
+    opts:["Hotel El Faro.","Hotel Lima.","Hotel Princesa Playa."],
     ok:0, expl:"<b>Respuesta A):</b> Hotel El Faro.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
@@ -2138,8 +1463,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ruta",
     text:"Acceso principal al Parque de la Represa:",
-    opts:["Por la Avenida del Mar.","Por Ricardo Soriano.","Por Avenida de la Represa o Calle Doctor Maíz Viñals."],
-    ok:2, expl:"<b>Respuesta A):</b> Por Avenida de la Represa o Calle Doctor Maíz Viñals.",
+    opts:["Por Avenida de la Represa o Calle Doctor Maíz Viñals.","Por Ricardo Soriano.","Por la Avenida del Mar."],
+    ok:0, expl:"<b>Respuesta A):</b> Por Avenida de la Represa o Calle Doctor Maíz Viñals.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -2150,20 +1475,20 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ruta",
     text:"Para llegar a la Calle Ancha en el Casco Antiguo desde el norte:",
-    opts:["Por la Avenida Nabeul.","Por la Avenida del Mercado.","Por la Plaza de Santo Cristo."],
+    opts:["Por la Plaza de Santo Cristo.","Por la Avenida del Mercado.","Por la Avenida Nabeul."],
     ok:0, expl:"<b>Respuesta A):</b> Por la Plaza de Santo Cristo.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"¿Cuál es la calle principal de la Urbanización Miraflores?",
-    opts:["Calle Beatriz de Vicuña.","Calle Mayorazgo.","Calle José Iturbi."],
+    opts:["Calle José Iturbi.","Calle Mayorazgo.","Calle Beatriz de Vicuña."],
     ok:2, expl:"<b>Respuesta C):</b> Calle Beatriz de Vicuña.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Qué edificio institucional se encuentra en la Plaza de la Iglesia?",
-    opts:["El Ayuntamiento (antiguo).","Ambas son correctas.","La Iglesia de la Encarnación."],
-    ok:1, expl:"<b>Respuesta C):</b> Ambas son correctas.",
+    opts:["El Ayuntamiento (antiguo).","La Iglesia de la Encarnación.","Ambas son correctas."],
+    ok:2, expl:"<b>Respuesta C):</b> Ambas son correctas.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ruta",
@@ -2180,13 +1505,13 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ruta",
     text:"Para entrar a la Urbanización Sierra Blanca desde la autovía A-7 (sentido Cádiz):",
-    opts:["Salida Marbella Centro.","Salida Nagüeles (km 182).","Salida Puerto Banús."],
-    ok:2, expl:"<b>Respuesta A):</b> Salida Nagüeles (km 182).",
+    opts:["Salida Nagüeles (km 182).","Salida Marbella Centro.","Salida Puerto Banús."],
+    ok:0, expl:"<b>Respuesta A):</b> Salida Nagüeles (km 182).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Cuál es el hotel más emblemático de la zona de Nagüeles?",
-    opts:["Hotel Puente Romano.","Hotel NH Marbella.","Hotel Alanda."],
+    opts:["Hotel Puente Romano.","Hotel Alanda.","Hotel NH Marbella."],
     ok:1, expl:"<b>Respuesta B):</b> Hotel Alanda.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
@@ -2210,20 +1535,20 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ruta",
     text:"Acceso a la Urbanización La Virginia:",
-    opts:["Por la Avenida de Jaime de Mora.","Por la Avenida Cánovas del Castillo.","Por la carretera de circunvalación, salida hacia la montaña."],
-    ok:1, expl:"<b>Respuesta C):</b> Por la Avenida Cánovas del Castillo.",
+    opts:["Por la Avenida de Jaime de Mora.","Por la carretera de circunvalación, salida hacia la montaña.","Por la Avenida Cánovas del Castillo."],
+    ok:2, expl:"<b>Respuesta C):</b> Por la Avenida Cánovas del Castillo.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Qué hotel se sitúa frente a la zona de Coral Beach?",
-    opts:["Hotel Melia Marbella Banús.","Hotel Nobu Marbella.","Hotel Iberostar Selection Marbella Coral Beach."],
-    ok:2, expl:"<b>Respuesta A):</b> Hotel Iberostar Selection Marbella Coral Beach.",
+    opts:["Hotel Iberostar Selection Marbella Coral Beach.","Hotel Nobu Marbella.","Hotel Melia Marbella Banús."],
+    ok:0, expl:"<b>Respuesta A):</b> Hotel Iberostar Selection Marbella Coral Beach.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"conectividad",
     text:"La Avenida Ashmawi conecta:",
-    opts:["San Pedro con Guadalmina.","El centro de Marbella con el puerto.","La zona de Nagüeles con la Milla de Oro."],
-    ok:2, expl:"<b>Respuesta A):</b> La zona de Nagüeles con la Milla de Oro.",
+    opts:["La zona de Nagüeles con la Milla de Oro.","El centro de Marbella con el puerto.","San Pedro con Guadalmina."],
+    ok:0, expl:"<b>Respuesta A):</b> La zona de Nagüeles con la Milla de Oro.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ruta",
@@ -2246,8 +1571,8 @@ const PREGUNTAS = [
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Dónde se ubica la Urbanización Ancon Sierra?",
-    opts:["Junto a la playa del Ancón.","En la falda de Sierra Blanca, acceso por Nagüeles.","En San Pedro Alcántara."],
-    ok:1, expl:"<b>Respuesta A):</b> En la falda de Sierra Blanca, acceso por Nagüeles.",
+    opts:["En la falda de Sierra Blanca, acceso por Nagüeles.","Junto a la playa del Ancón.","En San Pedro Alcántara."],
+    ok:0, expl:"<b>Respuesta A):</b> En la falda de Sierra Blanca, acceso por Nagüeles.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
@@ -2259,43 +1584,43 @@ const PREGUNTAS = [
   { zone:"marbella", tipo:"ubicacion",
     text:"La Urbanización Meisho Hills pertenece a:",
     opts:["Sierra Blanca.","Los Monteros.","Hacienda de las Chapas."],
-    ok:2, expl:"<b>Respuesta A):</b> Sierra Blanca.",
+    ok:0, expl:"<b>Respuesta A):</b> Sierra Blanca.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ruta",
     text:"Acceso a la Urbanización Santa Margarita:",
-    opts:["En San Pedro, zona sur.","Junto al Hospital Costa del Sol.","Por la zona de la Milla de Oro, lado norte."],
+    opts:["Por la zona de la Milla de Oro, lado norte.","Junto al Hospital Costa del Sol.","En San Pedro, zona sur."],
     ok:0, expl:"<b>Respuesta A):</b> Por la zona de la Milla de Oro, lado norte.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Qué arroyo divide la Milla de Oro de Marbella?",
-    opts:["Arroyo de la Represa.","Río Verde.","Arroyo de Nagüeles."],
-    ok:1, expl:"<b>Respuesta C):</b> Río Verde.",
+    opts:["Arroyo de la Represa.","Arroyo de Nagüeles.","Río Verde."],
+    ok:2, expl:"<b>Respuesta C):</b> Río Verde.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ruta",
     text:"Para ir de Sierra Blanca a Camoján sin bajar a la autovía:",
-    opts:["Hay que bajar obligatoriamente a la Avenida Don Jaime de Mora.","No es posible, están cerradas entre sí.","Se puede por viales internos (Calle Rossini / Calle Verdi)."],
-    ok:2, expl:"<b>Respuesta A):</b> Se puede por viales internos (Calle Rossini / Calle Verdi).",
+    opts:["Se puede por viales internos (Calle Rossini / Calle Verdi).","No es posible, están cerradas entre sí.","Hay que bajar obligatoriamente a la Avenida Don Jaime de Mora."],
+    ok:0, expl:"<b>Respuesta A):</b> Se puede por viales internos (Calle Rossini / Calle Verdi).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Ubicación de la Clínica Buchinger Wilhelmi:",
-    opts:["Sierra Blanca.","Avenida Buchinger, 2 (Nagüeles).","Río Real."],
-    ok:1, expl:"<b>Respuesta A):</b> Avenida Buchinger, 2 (Nagüeles).",
+    opts:["Avenida Buchinger, 2 (Nagüeles).","Sierra Blanca.","Río Real."],
+    ok:0, expl:"<b>Respuesta A):</b> Avenida Buchinger, 2 (Nagüeles).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"¿Dónde se encuentra el Hotel Alanda Marbella?",
-    opts:["En Puerto Banús.","Junto a la Estación de Autobuses.","En plena Milla de Oro."],
-    ok:2, expl:"<b>Respuesta A):</b> En plena Milla de Oro.",
+    opts:["En plena Milla de Oro.","Junto a la Estación de Autobuses.","En Puerto Banús."],
+    ok:0, expl:"<b>Respuesta A):</b> En plena Milla de Oro.",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"nueva", tipo:"ruta",
     text:"Entrada principal a Puerto Banús para emergencias:",
-    opts:["Calle Ribera.","Avenida Julio Iglesias.","Avenida de las Naciones Unidas."],
-    ok:2, expl:"<b>Respuesta A):</b> Avenida de las Naciones Unidas.",
+    opts:["Avenida de las Naciones Unidas.","Avenida Julio Iglesias.","Calle Ribera."],
+    ok:0, expl:"<b>Respuesta A):</b> Avenida de las Naciones Unidas.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ruta",
@@ -2306,8 +1631,8 @@ const PREGUNTAS = [
 
   { zone:"nueva", tipo:"ubicacion",
     text:"¿Qué centro comercial es el punto neurálgico de Nueva Andalucía?",
-    opts:["Marina Banús.","La Colonia.","Centro Plaza."],
-    ok:2, expl:"<b>Respuesta A):</b> Centro Plaza.",
+    opts:["Centro Plaza.","La Colonia.","Marina Banús."],
+    ok:0, expl:"<b>Respuesta A):</b> Centro Plaza.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ubicacion",
@@ -2330,8 +1655,8 @@ const PREGUNTAS = [
 
   { zone:"nueva", tipo:"ubicacion",
     text:"¿Dónde se ubica la Urbanización Magna Marbella?",
-    opts:["En primera línea de Puerto Banús.","En la zona alta de Nueva Andalucía.","Junto al Río Guadaiza."],
-    ok:1, expl:"<b>Respuesta A):</b> En la zona alta de Nueva Andalucía.",
+    opts:["En la zona alta de Nueva Andalucía.","En primera línea de Puerto Banús.","Junto al Río Guadaiza."],
+    ok:0, expl:"<b>Respuesta A):</b> En la zona alta de Nueva Andalucía.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ruta",
@@ -2355,49 +1680,49 @@ const PREGUNTAS = [
   { zone:"sanpedro", tipo:"ruta",
     text:"Para ir de Nueva Andalucía a San Pedro sin tocar la carretera nacional:",
     opts:["Por el puente del Río Guadaiza en la zona de La Campana.","No es posible para camiones.","Por el Paseo Marítimo."],
-    ok:1, expl:"<b>Respuesta A):</b> Por el puente del Río Guadaiza en la zona de La Campana.",
+    ok:0, expl:"<b>Respuesta A):</b> Por el puente del Río Guadaiza en la zona de La Campana.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"¿En qué zona está el IES Nueva Andalucía?",
-    opts:["En Puerto Banús.","En La Campana.","En la zona de Las Brisas."],
-    ok:2, expl:"<b>Respuesta A):</b> En La Campana.",
+    opts:["En La Campana.","En Puerto Banús.","En la zona de Las Brisas."],
+    ok:0, expl:"<b>Respuesta A):</b> En La Campana.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ruta",
     text:"Acceso a la Urbanización La Cerquilla:",
-    opts:["En la Milla de Oro.","Junto a la Mezquita.","Zona norte de Nueva Andalucía, por encima de Los Naranjos Golf."],
+    opts:["Zona norte de Nueva Andalucía, por encima de Los Naranjos Golf.","Junto a la Mezquita.","En la Milla de Oro."],
     ok:0, expl:"<b>Respuesta A):</b> Zona norte de Nueva Andalucía, por encima de Los Naranjos Golf.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"¿Dónde se encuentra el Hotel BlueBay Banús?",
-    opts:["Urbanización Marbella del Este.","Urbanización San Javier.","Urbanización Elviria."],
-    ok:1, expl:"<b>Respuesta A):</b> Urbanización San Javier.",
+    opts:["Urbanización San Javier.","Urbanización Marbella del Este.","Urbanización Elviria."],
+    ok:0, expl:"<b>Respuesta A):</b> Urbanización San Javier.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"La Avenida Valle Inclán se encuentra en:",
-    opts:["Marbella Centro.","Nueva Andalucía (La Campana).","San Pedro de Alcántara."],
-    ok:1, expl:"<b>Respuesta A):</b> Nueva Andalucía (La Campana).",
+    opts:["Nueva Andalucía (La Campana).","Marbella Centro.","San Pedro de Alcántara."],
+    ok:0, expl:"<b>Respuesta A):</b> Nueva Andalucía (La Campana).",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Punto crítico: El túnel de la Avenida de las Naciones Unidas tiene limitación de altura para:",
-    opts:["Solo vehículos ligeros.","Camiones de bomberos tipo BUP (suelen pasar, pero con mucha precaución).","No hay túnel en esa avenida."],
-    ok:1, expl:"<b>Respuesta A):</b> Camiones de bomberos tipo BUP (suelen pasar, pero con mucha precaución).",
+    opts:["Camiones de bomberos tipo BUP (suelen pasar, pero con mucha precaución).","Solo vehículos ligeros.","No hay túnel en esa avenida."],
+    ok:0, expl:"<b>Respuesta A):</b> Camiones de bomberos tipo BUP (suelen pasar, pero con mucha precaución).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"nueva", tipo:"ubicacion",
     text:"¿Qué urbanización está junto al Turtle Lake (Lago de las Tortugas)?",
-    opts:["Alzambra.","Cerca de Los Naranjos / Parcelas del Golf.","El Herrojo."],
-    ok:1, expl:"<b>Respuesta C):</b> Cerca de Los Naranjos / Parcelas del Golf.",
+    opts:["Alzambra.","El Herrojo.","Cerca de Los Naranjos / Parcelas del Golf."],
+    ok:2, expl:"<b>Respuesta C):</b> Cerca de Los Naranjos / Parcelas del Golf.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"marbella", tipo:"ubicacion",
     text:"Ubicación del Ocean Club Marbella:",
-    opts:["Avenida de El Carril del Reloj.","Playa de Fontanilla.","Paseo Alberto Vidiella Tudores (Puerto Banús)."],
-    ok:2, expl:"<b>Respuesta B):</b> Paseo Alberto Vidiella Tudores (Puerto Banús).",
+    opts:["Avenida de El Carril del Reloj.","Paseo Alberto Vidiella Tudores (Puerto Banús).","Playa de Fontanilla."],
+    ok:1, expl:"<b>Respuesta B):</b> Paseo Alberto Vidiella Tudores (Puerto Banús).",
     route:{c:[36.5101,-4.8846],z:15,from:[36.5101,-4.8846],to:[36.5101,-4.8846],path:[[36.5101,-4.8846],[36.5101,-4.8846]]}},
 
   { zone:"nueva", tipo:"ruta",
@@ -2408,20 +1733,20 @@ const PREGUNTAS = [
 
   { zone:"nueva", tipo:"ubicacion",
     text:"Para un incendio en la zona de locales de Puerto Banús (Muelle de Ribera):",
-    opts:["Se debe entrar a pie.","Se entra por la barrera principal con llave/mando de emergencias.","Solo por el muelle de honor."],
-    ok:1, expl:"<b>Respuesta A):</b> Se entra por la barrera principal con llave/mando de emergencias.",
+    opts:["Se entra por la barrera principal con llave/mando de emergencias.","Se debe entrar a pie.","Solo por el muelle de honor."],
+    ok:0, expl:"<b>Respuesta A):</b> Se entra por la barrera principal con llave/mando de emergencias.",
     route:{c:[36.5012,-4.9578],z:15,from:[36.5012,-4.9578],to:[36.5012,-4.9578],path:[[36.5012,-4.9578],[36.5012,-4.9578]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"La arteria principal norte-sur de San Pedro Alcántara es:",
-    opts:["Avenida Luis Braille.","Avenida Pablo Picasso.","Avenida Marqués del Duero."],
-    ok:2, expl:"<b>Respuesta A):</b> Avenida Marqués del Duero.",
+    opts:["Avenida Marqués del Duero.","Avenida Pablo Picasso.","Avenida Luis Braille."],
+    ok:0, expl:"<b>Respuesta A):</b> Avenida Marqués del Duero.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"Acceso principal a la Urbanización Guadalmina Baja:",
-    opts:["Por la Urbanización Linda Vista.","Por el centro de San Pedro.","Por la salida de la A-7 (km 171) hacia el Hotel Guadalmina."],
-    ok:2, expl:"<b>Respuesta B):</b> Por la salida de la A-7 (km 171) hacia el Hotel Guadalmina.",
+    opts:["Por la Urbanización Linda Vista.","Por la salida de la A-7 (km 171) hacia el Hotel Guadalmina.","Por el centro de San Pedro."],
+    ok:1, expl:"<b>Respuesta B):</b> Por la salida de la A-7 (km 171) hacia el Hotel Guadalmina.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
@@ -2462,20 +1787,20 @@ const PREGUNTAS = [
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"¿En qué urbanización se encuentran las Termas Romanas de Las Bóvedas?",
-    opts:["Guadalmina Baja.","El Ingenio.","Linda Vista Playa."],
-    ok:2, expl:"<b>Respuesta B):</b> Linda Vista Playa.",
+    opts:["Guadalmina Baja.","Linda Vista Playa.","El Ingenio."],
+    ok:1, expl:"<b>Respuesta B):</b> Linda Vista Playa.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"El Hotel Guadalmina Spa & Golf Resort está en:",
-    opts:["Al norte de la carretera nacional.","Urbanización Guadalmina Baja, en primera línea de playa.","Junto al Río Guadaiza."],
-    ok:1, expl:"<b>Respuesta A):</b> Urbanización Guadalmina Baja, en primera línea de playa.",
+    opts:["Urbanización Guadalmina Baja, en primera línea de playa.","Al norte de la carretera nacional.","Junto al Río Guadaiza."],
+    ok:0, expl:"<b>Respuesta A):</b> Urbanización Guadalmina Baja, en primera línea de playa.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"¿Qué barrio de San Pedro se encuentra más al Este, lindando con el río Guadaiza?",
-    opts:["Fuente Nueva.","El Ingenio.","Salto del Agua."],
-    ok:1, expl:"<b>Respuesta A):</b> El Ingenio.",
+    opts:["El Ingenio.","Fuente Nueva.","Salto del Agua."],
+    ok:0, expl:"<b>Respuesta A):</b> El Ingenio.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ruta",
@@ -2487,43 +1812,43 @@ const PREGUNTAS = [
   { zone:"sanpedro", tipo:"ubicacion",
     text:"¿Dónde se sitúa la Basílica Paleocristiana de Vega del Mar?",
     opts:["Urbanización Linda Vista Baja.","San Pedro centro.","Guadalmina Alta."],
-    ok:1, expl:"<b>Respuesta A):</b> Urbanización Linda Vista Baja.",
+    ok:0, expl:"<b>Respuesta A):</b> Urbanización Linda Vista Baja.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"La Avenida de Burgos se localiza en San Pedro, en la zona de:",
-    opts:["El Ingenio.","Fuente Nueva.","El Salto."],
-    ok:1, expl:"<b>Respuesta A):</b> Fuente Nueva.",
+    opts:["Fuente Nueva.","El Ingenio.","El Salto."],
+    ok:0, expl:"<b>Respuesta A):</b> Fuente Nueva.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"Para acceder a la Urbanización El Herrojo desde San Pedro:",
-    opts:["Por la carretera de Istán.","Por la carretera de Ronda, subiendo a la derecha.","Por Nueva Andalucía."],
+    opts:["Por la carretera de Ronda, subiendo a la derecha.","Por la carretera de Istán.","Por Nueva Andalucía."],
     ok:0, expl:"<b>Respuesta A):</b> Por la carretera de Ronda, subiendo a la derecha.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"conectividad",
     text:"Punto crítico: La rotonda del Barco (San Pedro) conecta:",
-    opts:["El centro con la carretera de Ronda.","La Avenida del Mediterráneo con el Bulevar.","San Pedro con Puerto Banús por el interior."],
-    ok:1, expl:"<b>Respuesta A):</b> La Avenida del Mediterráneo con el Bulevar.",
+    opts:["La Avenida del Mediterráneo con el Bulevar.","El centro con la carretera de Ronda.","San Pedro con Puerto Banús por el interior."],
+    ok:0, expl:"<b>Respuesta A):</b> La Avenida del Mediterráneo con el Bulevar.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ubicacion",
     text:"¿Dónde está el IES Guadaiza?",
-    opts:["En la zona de El Ingenio.","En Puerto Banús.","En el barrio de Fuente Nueva."],
-    ok:2, expl:"<b>Respuesta A):</b> En el barrio de Fuente Nueva.",
+    opts:["En el barrio de Fuente Nueva.","En Puerto Banús.","En la zona de El Ingenio."],
+    ok:0, expl:"<b>Respuesta A):</b> En el barrio de Fuente Nueva.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"benahavis", tipo:"ruta",
     text:"Acceso a la Urbanización La Quinta desde el municipio de Marbella:",
-    opts:["Solo se puede entrar por Benahavís.","Por la zona norte de Nueva Andalucía (Av. Tomás Pascual).","Por la AP-7."],
-    ok:1, expl:"<b>Respuesta A):</b> Por la zona norte de Nueva Andalucía (Av. Tomás Pascual).",
+    opts:["Por la zona norte de Nueva Andalucía (Av. Tomás Pascual).","Solo se puede entrar por Benahavís.","Por la AP-7."],
+    ok:0, expl:"<b>Respuesta A):</b> Por la zona norte de Nueva Andalucía (Av. Tomás Pascual).",
     route:{c:[36.5292,-5.0478],z:15,from:[36.5292,-5.0478],to:[36.5292,-5.0478],path:[[36.5292,-5.0478],[36.5292,-5.0478]]}},
 
   { zone:"sanpedro", tipo:"ruta",
     text:"¿Qué puente cruza el río Guadalmina para ir hacia Estepona por la costa?",
-    opts:["No hay puente, es un paso subterráneo.","El puente de la A-7 junto a la Urbanización Guadalmina.","El puente de San Pedro."],
-    ok:1, expl:"<b>Respuesta A):</b> El puente de la A-7 junto a la Urbanización Guadalmina.",
+    opts:["El puente de la A-7 junto a la Urbanización Guadalmina.","No hay puente, es un paso subterráneo.","El puente de San Pedro."],
+    ok:0, expl:"<b>Respuesta A):</b> El puente de la A-7 junto a la Urbanización Guadalmina.",
     route:{c:[36.492,-4.976],z:15,from:[36.492,-4.976],to:[36.492,-4.976],path:[[36.492,-4.976],[36.492,-4.976]]}},
 
   { zone:"sanpedro", tipo:"ruta",
@@ -2732,23 +2057,16 @@ function tryLeaflet(route){
       dragging: true, scrollWheelZoom: false, tap: false
     });
 
-    // IGN España WMTS — cartografía oficial, máxima precisión callejero
-    // Capa base IGN con nombres de calles
+    // IGN España WMTS — cartografía oficial
     const ignBase = L.tileLayer(
       'https://www.ign.es/wmts/ign-base?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
       '&LAYER=IGNBaseTodo&STYLE=default&TILEMATRIXSET=GoogleMapsCompatible' +
       '&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng',
-      { maxZoom: 20, attribution: 'CC BY 4.0 © <a href="https://www.ign.es">IGN España</a>' }
+      { maxZoom: 20, attribution: 'CC BY 4.0 © IGN España' }
     );
-
-    // Catastro WMS encima — parcelas y edificios con precisión catastral
-    const catastro = L.tileLayer.wms(
-      'http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx?',
-      { layers: 'Catastro', format: 'image/png', transparent: true,
-        version: '1.1.1', opacity: 0.35,
-        attribution: '© Dirección General del Catastro' }
+    const catastro = L.tileLayer.wms('http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx?',
+      { layers:'Catastro', format:'image/png', transparent:true, version:'1.1.1', opacity:0.35 }
     );
-
     let tilesOk = false;
     ignBase.on('tileload', () => { tilesOk = true; });
     ignBase.on('tileerror', () => {
@@ -2761,13 +2079,7 @@ function tryLeaflet(route){
     });
     ignBase.addTo(leafletMap);
     catastro.addTo(leafletMap);
-
-    // Layer control — allow user to toggle catastro overlay
-    L.control.layers(
-      { 'IGN España': ignBase },
-      { 'Catastro (parcelas)': catastro },
-      { position: 'topright', collapsed: true }
-    ).addTo(leafletMap);
+    L.control.layers({'IGN España':ignBase},{'Catastro':catastro},{position:'topright',collapsed:true}).addTo(leafletMap);
 
     // Markers
     const mkA = L.divIcon({html:'<div style="width:26px;height:26px;background:#22C55E;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.6)">A</div>',className:'',iconSize:[26,26],iconAnchor:[13,13]});
@@ -2787,7 +2099,7 @@ function tryLeaflet(route){
       leafletMap.fitBounds(routeLayer.getBounds(), {padding:[30,30]});
       leafletMap.invalidateSize();
       const km = osrmPath._distanceKm ? ' · ' + osrmPath._distanceKm + ' km' : '';
-      updateMapLabel('🗺 Ruta real · IGN España + Catastro' + km);
+      updateMapLabel('🗺 Ruta real por calles · OSM' + km);
     }).catch(() => {
       // Fallback to straight path from question data
       const latlngs = route.path.map(p => L.latLng(p[0], p[1]));
@@ -2796,7 +2108,7 @@ function tryLeaflet(route){
       L.polyline(latlngs, {color:'#FFB800',weight:2,opacity:.8,dashArray:'8 6'}).addTo(leafletMap);
       leafletMap.fitBounds(routeLayer.getBounds(), {padding:[30,30]});
       leafletMap.invalidateSize();
-      updateMapLabel('🗺 Ruta aproximada · IGN España + Catastro');
+      updateMapLabel('🗺 Ruta aproximada · Sin routing disponible');
     });
 
   } catch(e){
@@ -2904,7 +2216,7 @@ function showOfflineCanvas(route){
 }
 
 function updateMapLabel(txt){
-  const el=document.getElementById('mapLabel')||document.querySelector('.map-label');
+  const el=document.querySelector('.map-label');
   if(el) el.textContent=txt;
 }
 
